@@ -23,6 +23,11 @@ dotnet publish (Join-Path $rootDir "src\Velo.Desktop\Velo.Desktop.csproj") `
     --no-restore `
     -o $publishDir
 
+$sourceIco = Join-Path $rootDir "src\Velo.Desktop\Assets\Velo.ico"
+if (Test-Path $sourceIco) {
+    Copy-Item $sourceIco -Destination (Join-Path $publishDir "Velo.ico") -Force
+}
+
 Write-Host "`n2. Creating Portable ZIP Package..." -ForegroundColor Yellow
 $zipPath = Join-Path $artifactsDir "Velo-win10-x64-v$Version-portable.zip"
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
