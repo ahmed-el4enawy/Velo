@@ -23,9 +23,21 @@ dotnet publish (Join-Path $rootDir "src\Velo.Desktop\Velo.Desktop.csproj") `
     --no-restore `
     -o $publishDir
 
+Write-Host "`n1b. Publishing Native Messaging Host..." -ForegroundColor Yellow
+dotnet publish (Join-Path $rootDir "src\Velo.NativeMessaging\Velo.NativeMessaging.csproj") `
+    -c Release `
+    --no-restore `
+    -o $publishDir
+
 $sourceIco = Join-Path $rootDir "src\Velo.Desktop\Assets\Velo.ico"
 if (Test-Path $sourceIco) {
     Copy-Item $sourceIco -Destination (Join-Path $publishDir "Velo.ico") -Force
+}
+
+Write-Host "`n1c. Configuring Native Messaging Host Manifest..." -ForegroundColor Yellow
+$registerScript = Join-Path $rootDir "scripts\register-native-host.ps1"
+if (Test-Path $registerScript) {
+    & $registerScript -HostExePath (Join-Path $publishDir "Velo.NativeMessaging.exe")
 }
 
 Write-Host "`n2. Creating Portable ZIP Package..." -ForegroundColor Yellow

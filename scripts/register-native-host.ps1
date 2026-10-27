@@ -4,10 +4,30 @@
 #>
 
 param(
-    [string]$HostExePath = "$PSScriptRoot\..\src\Velo.NativeMessaging\bin\x64\Release\net10.0\Velo.NativeMessaging.exe"
+    [string]$HostExePath = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($HostExePath)) {
+    $candidates = @(
+        (Join-Path $PSScriptRoot "..\publish\win-x64\Velo.NativeMessaging.exe"),
+        (Join-Path $PSScriptRoot "..\src\Velo.NativeMessaging\bin\x64\Release\net10.0\Velo.NativeMessaging.exe"),
+        (Join-Path $PSScriptRoot "..\src\Velo.NativeMessaging\bin\Release\net10.0\Velo.NativeMessaging.exe"),
+        (Join-Path $PSScriptRoot "..\src\Velo.NativeMessaging\bin\Debug\net10.0\Velo.NativeMessaging.exe")
+    )
+
+    foreach ($cand in $candidates) {
+        if (Test-Path $cand) {
+            $HostExePath = $cand
+            break
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($HostExePath)) {
+        $HostExePath = Join-Path $PSScriptRoot "..\publish\win-x64\Velo.NativeMessaging.exe"
+    }
+}
 
 $fullHostPath = [System.IO.Path]::GetFullPath($HostExePath)
 $targetDir = [System.IO.Path]::GetDirectoryName($fullHostPath)
@@ -21,7 +41,7 @@ $manifest = @{
     path = $fullHostPath
     type = "stdio"
     allowed_origins = @(
-        "chrome-extension://*/"
+        "chrome-extension://akobbbjojgceldlhaeiidogehdomjinn/"
     )
 }
 
@@ -31,8 +51,7 @@ $manifestJson = $manifest | ConvertTo-Json -Depth 4
 # Register for Chrome, Edge, and Firefox in HKCU (Per-user, zero admin required)
 $registryTargets = @(
     "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.velo.downloader",
-    "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.velo.downloader",
-    "HKCU:\Software\Mozilla\NativeMessagingHosts\com.velo.downloader"
+    "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.velo.downloader"
 )
 
 foreach ($regPath in $registryTargets) {
