@@ -62,7 +62,11 @@ public sealed class HttpProbe : IHttpProbe
             
             if (headResponse.IsSuccessStatusCode)
             {
-                effectiveUrl = headResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                var redirectedUri = headResponse.RequestMessage?.RequestUri;
+                if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                {
+                    effectiveUrl = redirectedUri.ToString();
+                }
                 contentLength = headResponse.Content.Headers.ContentLength;
                 etag = headResponse.Headers.ETag?.Tag;
                 lastModified = headResponse.Content.Headers.LastModified?.ToString("R");
@@ -98,7 +102,11 @@ public sealed class HttpProbe : IHttpProbe
                     if (contentRange != null && contentRange.Unit.Equals("bytes", StringComparison.OrdinalIgnoreCase))
                     {
                         rangeSupported = true;
-                        effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                        var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
+                        if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                        {
+                            effectiveUrl = redirectedUri.ToString();
+                        }
                         etag ??= rangeResponse.Headers.ETag?.Tag;
                         lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
                         contentDispositionFileName ??= ExtractFileNameFromDisposition(rangeResponse.Content.Headers.ContentDisposition);
@@ -112,7 +120,11 @@ public sealed class HttpProbe : IHttpProbe
                     {
                         // 206 returned without valid Content-Range header
                         rangeSupported = false;
-                        effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                        var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
+                        if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                        {
+                            effectiveUrl = redirectedUri.ToString();
+                        }
                         contentLength ??= rangeResponse.Content.Headers.ContentLength;
                         etag ??= rangeResponse.Headers.ETag?.Tag;
                         lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
@@ -123,7 +135,11 @@ public sealed class HttpProbe : IHttpProbe
                 {
                     // Server returned 200 OK to a range request (ranges ignored, fallback to sequential)
                     rangeSupported = false;
-                    effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                    var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
+                    if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                    {
+                        effectiveUrl = redirectedUri.ToString();
+                    }
                     contentLength ??= rangeResponse.Content.Headers.ContentLength;
                     etag ??= rangeResponse.Headers.ETag?.Tag;
                     lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
@@ -133,7 +149,11 @@ public sealed class HttpProbe : IHttpProbe
                 {
                     // 416 Range Not Satisfiable
                     rangeSupported = false;
-                    effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                    var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
+                    if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                    {
+                        effectiveUrl = redirectedUri.ToString();
+                    }
                     etag ??= rangeResponse.Headers.ETag?.Tag;
                     lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
                     if (rangeResponse.Content.Headers.ContentRange?.HasLength == true)
