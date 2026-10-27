@@ -32,6 +32,7 @@ public static class SqliteDatabaseInitializer
                 range_supported INTEGER NOT NULL DEFAULT 0,
                 state INTEGER NOT NULL DEFAULT 0,
                 priority INTEGER NOT NULL DEFAULT 1,
+                category INTEGER NOT NULL DEFAULT 0,
                 failure_code TEXT,
                 failure_reason TEXT,
                 created_at TEXT NOT NULL,
@@ -69,5 +70,28 @@ public static class SqliteDatabaseInitializer
             CREATE INDEX IF NOT EXISTS idx_downloads_state ON downloads(state);
         ";
         command.ExecuteNonQuery();
+
+        // Safe idempotent migration: Check if 'category' column exists in 'downloads' table
+        using var pragmaCmd = connection.CreateCommand();
+        pragmaCmd.CommandText = "PRAGMA table_info(downloads);";
+        bool hasCategory = false;
+        using (var reader = pragmaCmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), "category", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasCategory = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasCategory)
+        {
+            using var alterCmd = connection.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE downloads ADD COLUMN category INTEGER NOT NULL DEFAULT 0;";
+            alterCmd.ExecuteNonQuery();
+        }
     }
 }

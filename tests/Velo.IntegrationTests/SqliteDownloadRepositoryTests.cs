@@ -44,6 +44,7 @@ public class SqliteDownloadRepositoryTests : IDisposable
             DownloadedBytes = 250000,
             RangeSupported = true,
             StrongETag = "\"etag-999\"",
+            Category = CategoryType.Compressed,
             State = JobState.Downloading
         };
 
@@ -76,6 +77,7 @@ public class SqliteDownloadRepositoryTests : IDisposable
 
         retrieved.Should().NotBeNull();
         retrieved!.DisplayName.Should().Be("archive.zip");
+        retrieved.Category.Should().Be(CategoryType.Compressed);
         retrieved.ExpectedBytes.Should().Be(1000000);
         retrieved.Segments.Should().HaveCount(2);
         retrieved.Segments[0].NextByte.Should().Be(250000);

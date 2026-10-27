@@ -29,11 +29,11 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
                 INSERT INTO downloads (
                     id, original_url, effective_url, target_path, temp_path, display_name, host,
                     expected_bytes, downloaded_bytes, strong_etag, last_modified, range_supported,
-                    state, priority, failure_code, failure_reason, created_at, updated_at, finished_at
+                    state, priority, category, failure_code, failure_reason, created_at, updated_at, finished_at
                 ) VALUES (
                     @id, @original_url, @effective_url, @target_path, @temp_path, @display_name, @host,
                     @expected_bytes, @downloaded_bytes, @strong_etag, @last_modified, @range_supported,
-                    @state, @priority, @failure_code, @failure_reason, @created_at, @updated_at, @finished_at
+                    @state, @priority, @category, @failure_code, @failure_reason, @created_at, @updated_at, @finished_at
                 );";
 
             cmd.Parameters.AddWithValue("@id", job.Id.ToString());
@@ -50,6 +50,7 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             cmd.Parameters.AddWithValue("@range_supported", job.RangeSupported ? 1 : 0);
             cmd.Parameters.AddWithValue("@state", (int)job.State);
             cmd.Parameters.AddWithValue("@priority", (int)job.Priority);
+            cmd.Parameters.AddWithValue("@category", (int)job.Category);
             cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@created_at", job.CreatedAt.ToString("O"));
@@ -109,6 +110,8 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
                     last_modified = @last_modified,
                     range_supported = @range_supported,
                     state = @state,
+                    priority = @priority,
+                    category = @category,
                     failure_code = @failure_code,
                     failure_reason = @failure_reason,
                     updated_at = @updated_at,
@@ -128,6 +131,8 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             cmd.Parameters.AddWithValue("@last_modified", (object?)job.LastModified ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@range_supported", job.RangeSupported ? 1 : 0);
             cmd.Parameters.AddWithValue("@state", (int)job.State);
+            cmd.Parameters.AddWithValue("@priority", (int)job.Priority);
+            cmd.Parameters.AddWithValue("@category", (int)job.Category);
             cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@updated_at", DateTimeOffset.UtcNow.ToString("O"));
@@ -316,6 +321,7 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             RangeSupported = r.GetInt32(r.GetOrdinal("range_supported")) == 1,
             State = (JobState)r.GetInt32(r.GetOrdinal("state")),
             Priority = (JobPriority)r.GetInt32(r.GetOrdinal("priority")),
+            Category = (CategoryType)(r.IsDBNull(r.GetOrdinal("category")) ? 0 : r.GetInt32(r.GetOrdinal("category"))),
             FailureCode = r.IsDBNull(r.GetOrdinal("failure_code")) ? null : r.GetString(r.GetOrdinal("failure_code")),
             FailureReason = r.IsDBNull(r.GetOrdinal("failure_reason")) ? null : r.GetString(r.GetOrdinal("failure_reason")),
             CreatedAt = DateTimeOffset.Parse(r.GetString(r.GetOrdinal("created_at")), CultureInfo.InvariantCulture),
