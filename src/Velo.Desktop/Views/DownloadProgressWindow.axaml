@@ -1,0 +1,260 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Velo.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="490"
+        x:Class="Velo.Desktop.Views.DownloadProgressWindow"
+        x:DataType="vm:DownloadProgressWindowViewModel"
+        Title="{Binding WindowTitle}"
+        Icon="/Assets/Velo.ico"
+        Width="580" Height="490"
+        MinWidth="520" MinHeight="360"
+        WindowStartupLocation="CenterScreen"
+        Background="#2D2D2D"
+        Foreground="#F0F0F0">
+
+    <Window.Styles>
+        <Style Selector="Button.idmBtn">
+            <Setter Property="Background" Value="#333333" />
+            <Setter Property="BorderBrush" Value="#666666" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="14,4" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.idmBtn:pointerover">
+            <Setter Property="Background" Value="#444444" />
+            <Setter Property="BorderBrush" Value="#888888" />
+        </Style>
+
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Foreground" Value="#CBD5E1" />
+            <Setter Property="Background" Value="#252525" />
+            <Setter Property="BorderBrush" Value="#444444" />
+            <Setter Property="BorderThickness" Value="1,1,1,0" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="CornerRadius" Value="2,2,0,0" />
+        </Style>
+        <Style Selector="TabItem:selected">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#2D2D2D" />
+            <Setter Property="BorderBrush" Value="#777777" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Segment Table Styling -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinHeight" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#282828" />
+        </Style>
+        <Style Selector="ListBoxItem:nth-child(2n)">
+            <Setter Property="Background" Value="#222222" />
+        </Style>
+        <Style Selector="ListBoxItem:nth-child(2n+1)">
+            <Setter Property="Background" Value="#1C1C1C" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="10,8">
+        <!-- Collapsible Details Section at Bottom -->
+        <Border DockPanel.Dock="Bottom" IsVisible="{Binding IsDetailsExpanded}" Margin="0,4,0,0">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Start positions and download progress by connections"
+                           FontSize="11"
+                           Foreground="#E2E8F0"
+                           HorizontalAlignment="Center" />
+
+                <!-- Visual Connection Progress Graphic -->
+                <Border Height="16" Background="#F1F5F9" BorderBrush="#555555" BorderThickness="1" CornerRadius="1">
+                    <ItemsControl ItemsSource="{Binding Segments}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SegmentDisplayModel">
+                                <Border BorderBrush="#EF4444" BorderThickness="0,0,1,0">
+                                    <ProgressBar Minimum="0" Maximum="100"
+                                                 Value="{Binding ProgressPercentage}"
+                                                 Foreground="#10B981"
+                                                 Background="Transparent"
+                                                 BorderThickness="0" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <!-- Connection Streams Table -->
+                <Border Height="110" BorderBrush="#555555" BorderThickness="1" Background="#1C1C1C">
+                    <DockPanel>
+                        <!-- Table Header -->
+                        <Border DockPanel.Dock="Top" Background="#282828" BorderBrush="#444444" BorderThickness="0,0,0,1" Height="22">
+                            <Grid ColumnDefinitions="45,130,*">
+                                <Border Grid.Column="0" BorderBrush="#383838" BorderThickness="0,0,1,0" Padding="4,2">
+                                    <TextBlock Text="N." FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <Border Grid.Column="1" BorderBrush="#383838" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <TextBlock Text="Downloaded" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                </Border>
+                                <Border Grid.Column="2" Padding="8,2">
+                                    <TextBlock Text="Info" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Table Rows -->
+                        <ListBox ItemsSource="{Binding Segments}" Background="Transparent" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SegmentDisplayModel">
+                                    <Grid ColumnDefinitions="45,130,*">
+                                        <Border Grid.Column="0" BorderBrush="#282828" BorderThickness="0,0,1,0" Padding="4,1">
+                                            <TextBlock Text="{Binding Index}" FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <Border Grid.Column="1" BorderBrush="#282828" BorderThickness="0,0,1,0" Padding="8,1">
+                                            <TextBlock Text="{Binding DownloadedText}" FontSize="11" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                                        </Border>
+                                        <Border Grid.Column="2" Padding="8,1">
+                                            <TextBlock Text="{Binding InfoText}" FontSize="11" Foreground="#10B981" VerticalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Action Buttons Row -->
+        <Border DockPanel.Dock="Bottom" Margin="0,8,0,4">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,*">
+                <Button Grid.Column="1" Classes="idmBtn" Content="{Binding DetailsButtonText}" Command="{Binding ToggleDetailsCommand}" Width="120" Margin="4,0" />
+                <Button Grid.Column="2" Classes="idmBtn" Content="{Binding PauseButtonText}" Command="{Binding PauseResumeCommand}" Width="95" Margin="4,0" />
+                <Button Grid.Column="3" Classes="idmBtn" Content="Cancel" Command="{Binding CancelDownloadCommand}" Width="95" Margin="4,0" />
+            </Grid>
+        </Border>
+
+        <!-- Big Green Progress Bar -->
+        <Border DockPanel.Dock="Bottom" Margin="0,6,0,4" BorderBrush="#555555" BorderThickness="1" Height="18" Background="#1C1C1C">
+            <ProgressBar Minimum="0" Maximum="100"
+                         Value="{Binding Item.ProgressPercentage}"
+                         Foreground="#10B981"
+                         Background="#1C1C1C"
+                         BorderThickness="0"
+                         Height="16" />
+        </Border>
+
+        <!-- Main Tab Control -->
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" Margin="0">
+            <!-- TAB 1: Download status -->
+            <TabItem Header="Download status">
+                <Border BorderBrush="#555555" BorderThickness="1" CornerRadius="2" Padding="12,10" Margin="0,4,0,0" Background="#282828">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding EffectiveUrl}"
+                                   Foreground="#F8FAFC"
+                                   FontSize="11"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,4" />
+
+                        <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                            <!-- Status -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Status" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" Margin="0,2" />
+
+                            <!-- File size -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="File size" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding FileSizeText}" FontSize="11" Foreground="#F8FAFC" Margin="0,2" />
+
+                            <!-- Downloaded -->
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Downloaded" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DownloadedText}" FontSize="11" Foreground="#F8FAFC" Margin="0,2" />
+
+                            <!-- Transfer rate -->
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Transfer rate" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TransferRateText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" Margin="0,2" />
+
+                            <!-- Time left -->
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Time left" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TimeLeftText}" FontSize="11" Foreground="#F8FAFC" Margin="0,2" />
+
+                            <!-- Resume capability -->
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Resume capability" FontSize="11" Foreground="#E2E8F0" Margin="0,2" />
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ResumeCapabilityText}" FontSize="11" Foreground="#F8FAFC" Margin="0,2" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 2: Speed Limiter -->
+            <TabItem Header="Speed Limiter">
+                <Border BorderBrush="#555555" BorderThickness="1" CornerRadius="2" Padding="14,12" Margin="0,4,0,0" Background="#282828">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+                            <TextBlock Text="Transfer rate" FontSize="11" Foreground="#E2E8F0" />
+                            <TextBlock Text="{Binding TransferRateText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                        </StackPanel>
+
+                        <CheckBox Grid.Row="1" Grid.Column="0" Content="Use Speed Limiter" IsChecked="{Binding UseSpeedLimiter}" FontSize="11" Foreground="#F8FAFC" Margin="0,0,0,8" />
+
+                        <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4" Margin="0,0,0,10">
+                            <TextBlock Text="Maximum download speed:" FontSize="11" Foreground="#E2E8F0" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBox Text="{Binding SpeedLimitKBytes}" Width="90" Height="26" FontSize="11" Background="#1C1C1C" Foreground="#F8FAFC" BorderBrush="#555555" />
+                                <TextBlock Text="KBytes/sec" FontSize="11" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <CheckBox Grid.Row="3" Grid.Column="0" Content="Remember Speed Limiter settings for this file on download stop/resume"
+                                  IsChecked="{Binding RememberSpeedLimiter}"
+                                  FontSize="11" Foreground="#F8FAFC" />
+
+                        <Button Grid.Row="3" Grid.Column="1" Classes="idmBtn" Content="Hide tab" Command="{Binding HideTabCommand}" Width="90" VerticalAlignment="Bottom" />
+                    </Grid>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 3: Options on completion -->
+            <TabItem Header="Options on completion">
+                <Border BorderBrush="#555555" BorderThickness="1" CornerRadius="2" Padding="14,12" Margin="0,4,0,0" Background="#282828">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Save To:" FontSize="11" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,6" />
+
+                        <CheckBox Grid.Row="1" Grid.Column="0" Content="Show download complete dialog"
+                                  IsChecked="{Binding ShowDownloadCompleteDialog}"
+                                  FontSize="11" Foreground="#F8FAFC" Margin="0,0,0,8" />
+
+                        <Separator Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#444444" Margin="0,4,0,8" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Text="These settings are unavailable when 'Show download complete dialog' is turned on"
+                                   FontSize="11" Foreground="#94A3B8" Margin="0,0,0,8" />
+
+                        <StackPanel Grid.Row="4" Grid.Column="0" Spacing="6" IsEnabled="{Binding !ShowDownloadCompleteDialog}">
+                            <CheckBox Content="Hang up modem when done" IsChecked="{Binding HangUpModem}" FontSize="11" Foreground="#F8FAFC" />
+                            <CheckBox Content="Exit Velo when done" IsChecked="{Binding ExitWhenDone}" FontSize="11" Foreground="#F8FAFC" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Turn off computer when done" IsChecked="{Binding TurnOffComputer}" FontSize="11" Foreground="#F8FAFC" />
+                                <ComboBox ItemsSource="{Binding ShutdownActions}" SelectedItem="{Binding SelectedShutdownAction}"
+                                          FontSize="11" Width="110" Height="24" Background="#1C1C1C" Foreground="#F8FAFC" BorderBrush="#555555" />
+                            </StackPanel>
+                            <CheckBox Content="Force processes to terminate" IsChecked="{Binding ForceTerminate}" IsEnabled="{Binding TurnOffComputer}" Margin="20,0,0,0" FontSize="11" Foreground="#F8FAFC" />
+                        </StackPanel>
+
+                        <Button Grid.Row="4" Grid.Column="1" Classes="idmBtn" Content="Hide tab" Command="{Binding HideTabCommand}" Width="90" VerticalAlignment="Bottom" />
+                    </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
