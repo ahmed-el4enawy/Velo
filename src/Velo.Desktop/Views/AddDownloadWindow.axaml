@@ -3,59 +3,101 @@
         xmlns:vm="using:Velo.Desktop.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="380"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="330"
         x:Class="Velo.Desktop.Views.AddDownloadWindow"
         x:DataType="vm:AddDownloadWindowViewModel"
-        Title="Add Download — Velo"
-        Width="620" Height="400"
+        Title="Download File Info"
+        Icon="/Assets/Velo.ico"
+        Width="580" Height="340"
         CanResize="False"
-        WindowStartupLocation="CenterOwner"
-        Background="#14171F">
+        WindowStartupLocation="CenterScreen"
+        Background="#2E2E2E"
+        Foreground="#F0F0F0">
 
-    <Border Padding="24">
-        <StackPanel Spacing="16">
-            <!-- Header -->
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <Border Width="32" Height="32" CornerRadius="8" Background="#4F46E5">
-                    <TextBlock Text="➕" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="New Download" FontWeight="Bold" FontSize="16" Foreground="#F8FAFC" />
-                    <TextBlock Text="Enter file URL to accelerate with Velo multi-stream engine" FontSize="11" Foreground="#94A3B8" />
+    <Window.Styles>
+        <Style Selector="Button.idmActionBtn">
+            <Setter Property="Background" Value="#383838" />
+            <Setter Property="BorderBrush" Value="#666666" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="16,5" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+        <Style Selector="Button.idmActionBtn:pointerover">
+            <Setter Property="Background" Value="#484848" />
+            <Setter Property="BorderBrush" Value="#888888" />
+        </Style>
+        <Style Selector="Button.idmDefaultBtn">
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#222222" />
+            <Setter Property="BorderBrush" Value="#555555" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Padding" Value="6,3" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#222222" />
+            <Setter Property="BorderBrush" Value="#555555" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="Height" Value="26" />
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="14,12">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="75,*">
+            <!-- 1. URL -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="URL" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Url}" Margin="0,0,0,8" />
+
+            <!-- 2. Category -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Category" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Width="250" />
+                <Button Classes="idmActionBtn" Content="+" Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ToolTip.Tip="Add category" />
+            </StackPanel>
+
+            <!-- 3. Save As -->
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Save As" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto,75" Margin="0,0,0,8">
+                <TextBox Grid.Column="0" Text="{Binding SaveAsPath}" Margin="0,0,6,0" />
+                <Button Grid.Column="1" Classes="idmActionBtn" Content="..." Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0,0,8,0" Click="OnBrowseClick" />
+                
+                <!-- File Icon & Size -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding FileCategoryIcon}" FontSize="20" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding FileSizeDisplay}" FontSize="10" Foreground="#CBD5E1" HorizontalAlignment="Center" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-            </StackPanel>
+            </Grid>
 
-            <!-- URL Input with Inspect Button -->
-            <StackPanel Spacing="6">
-                <TextBlock Text="DOWNLOAD URL" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBox Grid.Column="0" Text="{Binding Url}" Watermark="https://example.com/file.zip" CornerRadius="6,0,0,6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
-                    <Button Grid.Column="1" Command="{Binding InspectUrlCommand}" Content="Inspect" CornerRadius="0,6,6,0" Background="#374151" Foreground="#F8FAFC" Padding="16,8" />
-                </Grid>
-            </StackPanel>
-
-            <!-- Probe Status Message -->
-            <Border Background="#1A202C" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="6" Padding="12,8">
-                <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#38BDF8" TextWrapping="Wrap" />
+            <!-- 4. Remember Path GroupBox -->
+            <Border Grid.Row="3" Grid.Column="1" BorderBrush="#555555" BorderThickness="1" CornerRadius="2" Margin="0,0,75,8" Padding="10,6,10,8">
+                <StackPanel Spacing="6">
+                    <CheckBox IsChecked="{Binding RememberCategoryPath}" Margin="0,-14,0,0" Background="#2E2E2E">
+                        <TextBlock Text="{Binding SelectedCategory, StringFormat='Remember this path for &quot;{0}&quot; category'}" FontSize="11" Foreground="#E2E8F0" Background="#2E2E2E" Padding="4,0" />
+                    </CheckBox>
+                    <TextBox Text="{Binding CategoryFolderPath}" IsReadOnly="True" FontSize="11" Height="24" Background="#222222" BorderBrush="#444444" Foreground="#94A3B8" />
+                </StackPanel>
             </Border>
 
-            <!-- File Name & Destination -->
-            <Grid ColumnDefinitions="*,*">
-                <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,8,0">
-                    <TextBlock Text="FILE NAME" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
-                    <TextBox Text="{Binding FileName}" Watermark="filename.ext" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="6" Margin="8,0,0,0">
-                    <TextBlock Text="SAVE FOLDER" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
-                    <TextBox Text="{Binding DestinationFolder}" Watermark="Save location" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
-                </StackPanel>
-            </Grid>
+            <!-- 5. Description -->
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Description" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,12" FontSize="12" Foreground="#E2E8F0" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Description}" Margin="0,0,75,12" />
 
-            <!-- Actions Footer -->
-            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
-                <Button Grid.Column="1" Content="Cancel" Click="OnCancelClick" Background="#242938" Foreground="#E2E8F0" Padding="20,9" CornerRadius="6" Margin="0,0,10,0" />
-                <Button Grid.Column="2" Content="Start Download" Command="{Binding StartDownloadCommand}" IsEnabled="{Binding CanStart}" Background="#4F46E5" Foreground="White" FontWeight="SemiBold" Padding="24,9" CornerRadius="6" />
-            </Grid>
-        </StackPanel>
+            <!-- 6. Footer Buttons -->
+            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14" VerticalAlignment="Bottom" Margin="0,4,0,2">
+                <Button Classes="idmActionBtn" Content="Download Later" Command="{Binding DownloadLaterCommand}" Width="125" />
+                <Button Classes="idmActionBtn idmDefaultBtn" Content="Start Download" Command="{Binding StartDownloadCommand}" Width="125" IsDefault="True" />
+                <Button Classes="idmActionBtn" Content="Cancel" Click="OnCancelClick" Width="100" />
+            </StackPanel>
+        </Grid>
     </Border>
 </Window>
