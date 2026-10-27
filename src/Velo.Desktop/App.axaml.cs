@@ -92,6 +92,13 @@ public partial class App : Avalonia.Application
 
             desktop.Exit += (_, _) =>
             {
+                try
+                {
+                    var downloadService = Services.GetService<Velo.Application.IDownloadService>();
+                    downloadService?.StopAllDownloadsAsync().GetAwaiter().GetResult();
+                }
+                catch { }
+
                 IpcServer.Stop();
             };
         }

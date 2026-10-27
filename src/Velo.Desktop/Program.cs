@@ -23,6 +23,54 @@ internal sealed class Program
             catch { }
         };
 
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Velo");
+                System.IO.Directory.CreateDirectory(dir);
+                string crashPath = System.IO.Path.Combine(dir, "crash.log");
+                System.IO.File.AppendAllText(crashPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [UnobservedTaskException] {e.Exception}\n\n");
+            }
+            catch { }
+            e.SetObserved();
+        };
+
+        const string MutexName = "Global\\Velo_Desktop_SingleInstance_Mutex";
+        bool createdNew;
+        using var mutex = new System.Threading.Mutex(true, MutexName, out createdNew);
+
+        if (!createdNew)
+        {
+            // Another instance is already running; forward activation and URL arguments via Named Pipe
+            try
+            {
+                string? urlToSend = null;
+                if (args != null && args.Length > 0)
+                {
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (args[i] == "--url" && i + 1 < args.Length)
+                        {
+                            urlToSend = args[i + 1];
+                            break;
+                        }
+                    }
+                }
+
+                string messageToSend = string.IsNullOrWhiteSpace(urlToSend) ? "__ACTIVATE__" : urlToSend;
+                using var client = new System.IO.Pipes.NamedPipeClientStream(".", "Velo_NamedPipe_IPC", System.IO.Pipes.PipeDirection.InOut);
+                client.Connect(1500);
+                using var writer = new System.IO.StreamWriter(client, System.Text.Encoding.UTF8, 1024, leaveOpen: true) { AutoFlush = true };
+                writer.WriteLine(messageToSend);
+            }
+            catch
+            {
+                // If named pipe forward fails or times out, silently terminate to avoid dual instances
+            }
+            return;
+        }
+
         try
         {
             BuildAvaloniaApp()
@@ -39,6 +87,10 @@ internal sealed class Program
             }
             catch { }
             throw;
+        }
+        finally
+        {
+            try { mutex.ReleaseMutex(); } catch { }
         }
     }
 

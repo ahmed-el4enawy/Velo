@@ -28,6 +28,13 @@ public partial class MainWindow : Window
     public void ForceExit()
     {
         _isForceExit = true;
+        try
+        {
+            var downloadService = App.Services?.GetService(typeof(Velo.Application.IDownloadService)) as Velo.Application.IDownloadService;
+            downloadService?.StopAllDownloadsAsync().GetAwaiter().GetResult();
+        }
+        catch { }
+
         Close();
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
