@@ -17,14 +17,10 @@ Write-Host "==========================================" -ForegroundColor Cyan
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 if (!(Test-Path $artifactsDir)) { New-Item $artifactsDir -ItemType Directory -Force | Out-Null }
 
-Write-Host "`n1. Publishing Self-Contained Windows 10 x64 Binary..." -ForegroundColor Yellow
+Write-Host "`n1. Publishing Windows 10 x64 Release Binary..." -ForegroundColor Yellow
 dotnet publish (Join-Path $rootDir "src\Velo.Desktop\Velo.Desktop.csproj") `
     -c Release `
-    -r win-x64 `
-    --self-contained true `
     --no-restore `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
     -o $publishDir
 
 Write-Host "`n2. Creating Portable ZIP Package..." -ForegroundColor Yellow

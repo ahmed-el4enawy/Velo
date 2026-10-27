@@ -4,6 +4,7 @@
 [Aa]rms/
 [Aa]rm64/
 artifacts/
+publish/
 TestResults/
 *.DotSettings.user
 
