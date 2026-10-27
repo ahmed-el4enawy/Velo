@@ -153,11 +153,41 @@ public partial class MainWindowViewModel : ViewModelBase
             SelectedDownload = item;
         };
 
+        vm.DownloadStarted += job =>
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                var item = Downloads.FirstOrDefault(d => d.Job.Id == job.Id);
+                if (item != null)
+                {
+                    OpenDownloadProgressDialog(item);
+                }
+            });
+        };
+
         var dialog = new AddDownloadWindow(vm);
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
-            dialog.ShowDialog(desktop.MainWindow!);
+            if (desktop.MainWindow != null && desktop.MainWindow.IsVisible)
+            {
+                dialog.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                dialog.Show();
+            }
         }
+    }
+
+    [RelayCommand]
+    public void OpenDownloadProgressDialog(DownloadItemViewModel? item = null)
+    {
+        item ??= SelectedDownload;
+        if (item == null) return;
+
+        var progressVm = new DownloadProgressWindowViewModel(item);
+        var progressWindow = new Views.DownloadProgressWindow(progressVm);
+        progressWindow.Show();
     }
 
     [RelayCommand]
