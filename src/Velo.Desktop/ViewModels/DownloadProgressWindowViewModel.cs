@@ -120,14 +120,45 @@ public partial class DownloadProgressWindowViewModel : ViewModelBase
         }
     }
 
+    partial void OnRememberSpeedLimiterChanged(bool value)
+    {
+        if (value)
+        {
+            ApplySpeedLimiter();
+        }
+    }
+
     private void ApplySpeedLimiter()
     {
         var throttler = App.Services?.GetService<ISpeedThrottler>();
+        long? targetLimit = UseSpeedLimiter && SpeedLimitKBytes > 0
+            ? (long)SpeedLimitKBytes * 1024
+            : null;
+
         if (throttler != null)
         {
-            throttler.SpeedLimitBytesPerSecond = UseSpeedLimiter && SpeedLimitKBytes > 0
-                ? (long)SpeedLimitKBytes * 1024
-                : null;
+            throttler.SpeedLimitBytesPerSecond = targetLimit;
+        }
+
+        if (RememberSpeedLimiter)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var settingsRepo = App.Services?.GetService<ISettingsRepository>();
+                    if (settingsRepo != null)
+                    {
+                        var settings = await settingsRepo.GetSettingsAsync();
+                        settings.SpeedLimitBytesPerSecond = targetLimit;
+                        await settingsRepo.SaveSettingsAsync(settings);
+                    }
+                }
+                catch
+                {
+                    // Ignore background persistence errors
+                }
+            });
         }
     }
 

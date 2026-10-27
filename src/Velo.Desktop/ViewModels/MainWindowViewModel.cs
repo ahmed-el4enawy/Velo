@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Velo.Application;
 using Velo.Desktop.Views;
 using Velo.Domain;
+using Velo.DownloadEngine;
 
 namespace Velo.Desktop.ViewModels;
 
@@ -13,6 +14,8 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IDownloadService? _downloadService;
     private readonly IServiceProvider? _serviceProvider;
+    private readonly ISpeedThrottler? _throttler;
+    private long _configuredSpeedLimitBytes = 2048 * 1024; // 2 MB/s default
 
     [ObservableProperty]
     private string _appTitle = "Velo — Download Accelerator";
@@ -62,6 +65,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _downloadService = downloadService;
         _serviceProvider = serviceProvider;
+        _throttler = serviceProvider?.GetService<ISpeedThrottler>();
 
         if (_downloadService != null)
         {
@@ -85,6 +89,32 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
             };
             _ = LoadInitialDownloadsAsync();
+            _ = LoadInitialSettingsAsync();
+        }
+    }
+
+    private async Task LoadInitialSettingsAsync()
+    {
+        try
+        {
+            var settingsRepo = _serviceProvider?.GetService<ISettingsRepository>();
+            if (settingsRepo != null)
+            {
+                var settings = await settingsRepo.GetSettingsAsync();
+                if (settings.SpeedLimitBytesPerSecond.HasValue && settings.SpeedLimitBytesPerSecond.Value > 0)
+                {
+                    _configuredSpeedLimitBytes = settings.SpeedLimitBytesPerSecond.Value;
+                    IsSpeedLimiterEnabled = true;
+                    if (_throttler != null)
+                    {
+                        _throttler.SpeedLimitBytesPerSecond = _configuredSpeedLimitBytes;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fallback to defaults gracefully
         }
     }
 
@@ -416,6 +446,16 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             SortBy = criterion;
             ApplyFilter();
+        }
+    }
+
+    partial void OnIsSpeedLimiterEnabledChanged(bool value)
+    {
+        if (_throttler != null)
+        {
+            _throttler.SpeedLimitBytesPerSecond = value && _configuredSpeedLimitBytes > 0
+                ? _configuredSpeedLimitBytes
+                : null;
         }
     }
 
