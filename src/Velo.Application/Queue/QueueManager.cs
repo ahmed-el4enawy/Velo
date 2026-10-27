@@ -45,17 +45,27 @@ public sealed class QueueManager : IQueueManager
 
         lock (_lock)
         {
-            if (_activeJobs.Count < MaxConcurrentDownloads)
+            // Prevent duplicate entries in active or queued lists
+            if (_activeJobs.ContainsKey(downloadId) || _queuedJobs.Contains(downloadId))
+            {
+                _logger?.LogDebug("Queue: Download {Id} is already in the queue or active. Skipping duplicate enqueue.", downloadId);
+                return;
+            }
+
+            var job = _repository.GetDownloadByIdAsync(downloadId, cancellationToken).GetAwaiter().GetResult();
+            string host = job?.Host ?? string.Empty;
+
+            int activeCount = _activeJobs.Count;
+            int activeHostCount = string.IsNullOrEmpty(host) ? 0 : GetActiveCountForHost(host);
+
+            if (activeCount < MaxConcurrentDownloads && (string.IsNullOrEmpty(host) || activeHostCount < MaxConnectionsPerHost))
             {
                 _activeJobs.TryAdd(downloadId, true);
                 canStartImmediately = true;
             }
             else
             {
-                if (!_queuedJobs.Contains(downloadId))
-                {
-                    _queuedJobs.Add(downloadId);
-                }
+                _queuedJobs.Add(downloadId);
             }
         }
 
@@ -66,7 +76,7 @@ public sealed class QueueManager : IQueueManager
         }
         else
         {
-            _logger?.LogInformation("Queue: Concurrency cap reached ({Max}). Enqueueing {Id}.", MaxConcurrentDownloads, downloadId);
+            _logger?.LogInformation("Queue: Concurrency cap reached. Enqueueing {Id}.", downloadId);
             var job = await _repository.GetDownloadByIdAsync(downloadId, cancellationToken);
             if (job != null)
             {
@@ -86,9 +96,21 @@ public sealed class QueueManager : IQueueManager
 
             if (_activeJobs.Count < MaxConcurrentDownloads && _queuedJobs.Count > 0)
             {
-                nextJobToStart = _queuedJobs[0];
-                _queuedJobs.RemoveAt(0);
-                _activeJobs.TryAdd(nextJobToStart.Value, true);
+                // Find next queued job that complies with per-host connection limits
+                for (int i = 0; i < _queuedJobs.Count; i++)
+                {
+                    var candidateId = _queuedJobs[i];
+                    var candidateJob = _repository.GetDownloadByIdAsync(candidateId, cancellationToken).GetAwaiter().GetResult();
+                    string candidateHost = candidateJob?.Host ?? string.Empty;
+
+                    if (string.IsNullOrEmpty(candidateHost) || GetActiveCountForHost(candidateHost) < MaxConnectionsPerHost)
+                    {
+                        nextJobToStart = candidateId;
+                        _queuedJobs.RemoveAt(i);
+                        _activeJobs.TryAdd(candidateId, true);
+                        break;
+                    }
+                }
             }
         }
 
@@ -97,6 +119,20 @@ public sealed class QueueManager : IQueueManager
             _logger?.LogInformation("Queue: Slot available. Promoting queued download {Id}.", nextJobToStart.Value);
             await _downloadService.StartDownloadAsync(nextJobToStart.Value, cancellationToken);
         }
+    }
+
+    private int GetActiveCountForHost(string host)
+    {
+        int count = 0;
+        foreach (var activeId in _activeJobs.Keys)
+        {
+            var activeJob = _repository.GetDownloadByIdAsync(activeId, CancellationToken.None).GetAwaiter().GetResult();
+            if (activeJob != null && string.Equals(activeJob.Host, host, StringComparison.OrdinalIgnoreCase))
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     public IReadOnlyList<Guid> GetActiveJobIds() => _activeJobs.Keys.ToList();

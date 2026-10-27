@@ -81,4 +81,41 @@ public class QueueManagerTests
 
         _mockDownloadService.Verify(s => s.StartDownloadAsync(job3, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task EnqueueAsync_DuplicateEntries_ShouldNotAddTwice()
+    {
+        var job1 = Guid.NewGuid();
+        await _queueManager.EnqueueAsync(job1);
+        await _queueManager.EnqueueAsync(job1);
+
+        _queueManager.GetActiveJobIds().Should().ContainSingle().Which.Should().Be(job1);
+        _queueManager.GetQueuedJobIds().Should().BeEmpty();
+        _mockDownloadService.Verify(s => s.StartDownloadAsync(job1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_WhenHostLimitReached_ShouldQueueEvenIfGlobalSlotAvailable()
+    {
+        var host = "cdn.example.com";
+        var job1 = Guid.NewGuid();
+        var job2 = Guid.NewGuid();
+
+        _queueManager.MaxConcurrentDownloads = 5;
+        _queueManager.MaxConnectionsPerHost = 1;
+
+        _mockRepo.Setup(r => r.GetDownloadByIdAsync(job1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DownloadJob { Id = job1, Host = host, State = JobState.Created });
+        _mockRepo.Setup(r => r.GetDownloadByIdAsync(job2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DownloadJob { Id = job2, Host = host, State = JobState.Created });
+
+        await _queueManager.EnqueueAsync(job1);
+        await _queueManager.EnqueueAsync(job2);
+
+        _queueManager.GetActiveJobIds().Should().ContainSingle().Which.Should().Be(job1);
+        _queueManager.GetQueuedJobIds().Should().ContainSingle().Which.Should().Be(job2);
+
+        _mockDownloadService.Verify(s => s.StartDownloadAsync(job1, It.IsAny<CancellationToken>()), Times.Once);
+        _mockDownloadService.Verify(s => s.StartDownloadAsync(job2, It.IsAny<CancellationToken>()), Times.Never);
+    }
 }
