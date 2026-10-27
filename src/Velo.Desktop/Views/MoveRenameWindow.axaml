@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Velo.Desktop.Views.MoveRenameWindow"
+        Title="Move / Rename Download"
+        Icon="/Assets/Velo.ico"
+        Width="500" Height="250"
+        MinWidth="450" MinHeight="230"
+        WindowStartupLocation="CenterOwner"
+        CanResize="false"
+        Background="#1E1E22"
+        Foreground="#F1F5F9">
+
+    <Window.Styles>
+        <Style Selector="Button.dialogBtn">
+            <Setter Property="Background" Value="#2A2D36" />
+            <Setter Property="BorderBrush" Value="#4B5563" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.dialogBtn:pointerover">
+            <Setter Property="Background" Value="#374151" />
+            <Setter Property="BorderBrush" Value="#9CA3AF" />
+        </Style>
+        <Style Selector="Button.primaryBtn">
+            <Setter Property="Background" Value="#0284C7" />
+            <Setter Property="BorderBrush" Value="#38BDF8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.primaryBtn:pointerover">
+            <Setter Property="Background" Value="#0369A1" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="18,16">
+        <!-- Bottom Buttons -->
+        <Border DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Classes="primaryBtn" Content="Apply" Click="OnApplyClick" />
+                <Button Classes="dialogBtn" Content="Cancel" Click="OnCancelClick" />
+            </StackPanel>
+        </Border>
+
+        <!-- Fields -->
+        <StackPanel Spacing="12" VerticalAlignment="Center">
+            <TextBlock Text="Move / Rename Download" FontSize="15" FontWeight="Bold" Foreground="#38BDF8" />
+            <TextBlock Text="Specify a new name or destination folder for this downloaded file." FontSize="11" Foreground="#94A3B8" />
+
+            <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
+                <!-- File Name -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="File Name:" VerticalAlignment="Center" FontSize="12" Foreground="#CBD5E1" />
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="FileNameBox" Margin="0,4" Height="30" FontSize="12" Background="#141416" BorderBrush="#3F4452" Foreground="#F8FAFC" />
+
+                <!-- Folder Path -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Folder:" VerticalAlignment="Center" FontSize="12" Foreground="#CBD5E1" />
+                <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,4">
+                    <TextBox Grid.Column="0" x:Name="FolderPathBox" Height="30" FontSize="12" Background="#141416" BorderBrush="#3F4452" Foreground="#F8FAFC" />
+                    <Button Grid.Column="1" Classes="dialogBtn" Content="Browse..." Margin="8,0,0,0" Height="30" Click="OnBrowseClick" />
+                </Grid>
+            </Grid>
+        </StackPanel>
+    </DockPanel>
+</Window>

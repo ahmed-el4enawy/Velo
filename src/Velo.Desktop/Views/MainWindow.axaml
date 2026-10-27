@@ -11,107 +11,262 @@
         Width="1140" Height="700"
         MinWidth="900" MinHeight="550"
         WindowStartupLocation="CenterScreen"
-        Background="#18181A">
+        Background="#0E1015">
 
     <Window.Styles>
-        <!-- IDM Ribbon Button Style -->
+        <!-- Gold / Obsidian Ribbon Button Style -->
         <Style Selector="Button.ribbonBtn">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="7,5" />
             <Setter Property="Margin" Value="2,0" />
-            <Setter Property="MinWidth" Value="60" />
+            <Setter Property="MinWidth" Value="62" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.ribbonBtn:pointerover">
-            <Setter Property="Background" Value="#2A2D36" />
-            <Setter Property="BorderBrush" Value="#3F4452" />
+            <Setter Property="Background" Value="#1E2028" />
+            <Setter Property="BorderBrush" Value="#3F3924" />
+        </Style>
+        <Style Selector="Button.ribbonBtn:pressed">
+            <Setter Property="Background" Value="#29261E" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
         </Style>
 
         <!-- Category Item Style -->
         <Style Selector="Button.categoryBtn">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#CBD5E1" />
+            <Setter Property="Foreground" Value="#94A3B8" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="CornerRadius" Value="4" />
             <Setter Property="FontSize" Value="12" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="Foreground" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.categoryBtn:pointerover">
-            <Setter Property="Background" Value="#252A36" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#1A1C24" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
         </Style>
 
-        <!-- Dense Data Row ListBox Item Style -->
+        <!-- Dense Data Row ListBox Item Style with Gold Accent Selection -->
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
-            <Setter Property="MinHeight" Value="24" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Height" Value="26" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="BorderBrush" Value="#252830" />
+            <Setter Property="BorderBrush" Value="#1B1D24" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
         </Style>
         <Style Selector="ListBoxItem:nth-child(2n)">
-            <Setter Property="Background" Value="#1C1E24" />
+            <Setter Property="Background" Value="#121317" />
         </Style>
         <Style Selector="ListBoxItem:nth-child(2n+1)">
-            <Setter Property="Background" Value="#17191E" />
+            <Setter Property="Background" Value="#0E1015" />
         </Style>
         <Style Selector="ListBoxItem:pointerover">
-            <Setter Property="Background" Value="#262C3A" />
+            <Setter Property="Background" Value="#1F222B" />
         </Style>
         <Style Selector="ListBoxItem:selected">
-            <Setter Property="Background" Value="#0A3A68" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#272314" />
+            <Setter Property="BorderThickness" Value="2,0,0,1" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+        </Style>
+
+        <!-- Context Menu Dark Styling with Amber Accents -->
+        <Style Selector="ContextMenu.idmContextMenu">
+            <Setter Property="Background" Value="#15171E" />
+            <Setter Property="BorderBrush" Value="#2E2B20" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="0,4" />
+        </Style>
+        <Style Selector="ContextMenu.idmContextMenu MenuItem">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#E2E8F0" />
+            <Setter Property="Padding" Value="14,5" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+        <Style Selector="ContextMenu.idmContextMenu MenuItem:pointerover">
+            <Setter Property="Background" Value="#28251B" />
+            <Setter Property="Foreground" Value="#FBBF24" />
+        </Style>
+        <Style Selector="ContextMenu.idmContextMenu MenuItem:disabled">
+            <Setter Property="Foreground" Value="#4B5563" />
+        </Style>
+        <Style Selector="ContextMenu.idmContextMenu Separator">
+            <Setter Property="Background" Value="#252730" />
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="0,3" />
         </Style>
     </Window.Styles>
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+M" Command="{Binding MoveRenameSelectedCommand}" />
+        <KeyBinding Gesture="Delete" Command="{Binding RemoveSelectedWithDialogCommand}" />
+    </Window.KeyBindings>
+
     <DockPanel>
         <!-- 1. Top Classical Menu Bar (Tasks, File, Downloads, View, Help) -->
-        <Border DockPanel.Dock="Top" Background="#1E1E20" BorderBrush="#2C2C30" BorderThickness="0,0,0,1">
+        <Border DockPanel.Dock="Top" Background="#121318" BorderBrush="#252732" BorderThickness="0,0,0,1">
             <Menu Background="Transparent" Foreground="#E2E8F0" FontSize="12">
-                <MenuItem Header="Tasks">
-                    <MenuItem Header="Add new download..." Command="{Binding OpenAddDownloadDialogCommand}" InputGesture="Ctrl+N" />
-                    <MenuItem Header="Paste from clipboard" Command="{Binding PasteAndAddDownloadCommand}" InputGesture="Ctrl+V" />
+                <!-- 1. Tasks Menu -->
+                <MenuItem Header="_Tasks">
+                    <MenuItem Header="Add new download" Command="{Binding OpenAddDownloadDialogCommand}" InputGesture="Ctrl+N" />
+                    <MenuItem Header="Add batch download" Command="{Binding OpenGrabberDialogCommand}" />
+                    <MenuItem Header="Add batch download from clipboard" Command="{Binding PasteAndAddDownloadCommand}" InputGesture="Ctrl+V" />
+                    <MenuItem Header="Run site grabber" Command="{Binding OpenGrabberDialogCommand}" />
                     <Separator />
-                    <MenuItem Header="Exit" />
+                    <MenuItem Header="Show drop target" Command="{Binding OpenSettingsDialogCommand}" />
+                    <Separator />
+                    <MenuItem Header="Export">
+                        <MenuItem Header="To text file" Command="{Binding ExportDownloadsCommand}" CommandParameter="txt" />
+                        <MenuItem Header="To IDM export file" Command="{Binding ExportDownloadsCommand}" CommandParameter="ef2" />
+                    </MenuItem>
+                    <MenuItem Header="Import">
+                        <MenuItem Header="From text file" Command="{Binding ImportDownloadsCommand}" />
+                        <MenuItem Header="From IDM export file" Command="{Binding ImportDownloadsCommand}" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Exit" Command="{Binding CloseAppCommand}" />
                 </MenuItem>
-                <MenuItem Header="File">
-                    <MenuItem Header="Stop download" Command="{Binding StopSelectedCommand}" />
-                    <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
+
+                <!-- 2. File Menu -->
+                <MenuItem Header="_File">
+                    <MenuItem Header="Stop Download" Command="{Binding StopSelectedCommand}" />
+                    <MenuItem Header="Remove" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
+                    <MenuItem Header="Download Now" Command="{Binding ResumeSelectedCommand}" />
+                    <MenuItem Header="Redownload" Command="{Binding RedownloadSelectedCommand}" />
                 </MenuItem>
-                <MenuItem Header="Downloads">
-                    <MenuItem Header="Resume All" Command="{Binding ResumeAllCommand}" />
+
+                <!-- 3. Downloads Menu -->
+                <MenuItem Header="_Downloads">
+                    <MenuItem Header="Pause All" Command="{Binding PauseAllCommand}" />
                     <MenuItem Header="Stop All" Command="{Binding PauseAllCommand}" />
                     <Separator />
-                    <MenuItem Header="Delete Completed" Command="{Binding DeleteCompletedCommand}" />
-                </MenuItem>
-                <MenuItem Header="View">
-                    <MenuItem Header="Toolbar" IsChecked="True" />
-                    <MenuItem Header="Categories" IsChecked="True" />
-                </MenuItem>
-                <MenuItem Header="Help">
-                    <MenuItem Header="Options / Preferences" Command="{Binding OpenSettingsDialogCommand}" />
+                    <MenuItem Header="Delete All Completed" Command="{Binding DeleteCompletedCommand}" />
                     <Separator />
-                    <MenuItem Header="About Velo..." Command="{Binding ShowAboutDialogCommand}" />
+                    <MenuItem Header="Find (Ctrl-F)" Command="{Binding FocusSearchCommand}" InputGesture="Ctrl+F" />
+                    <MenuItem Header="Find Next (F3)" Command="{Binding FocusSearchCommand}" InputGesture="F3" />
+                    <Separator />
+                    <MenuItem Header="Scheduler" Command="{Binding OpenSettingsDialogCommand}" />
+                    <MenuItem Header="Start queue">
+                        <MenuItem Header="Start main download queue" Command="{Binding ResumeAllCommand}" />
+                        <MenuItem Header="Start synchronization queue" Command="{Binding ResumeAllCommand}" />
+                    </MenuItem>
+                    <MenuItem Header="Stop queue">
+                        <MenuItem Header="Stop main download queue" Command="{Binding PauseAllCommand}" />
+                        <MenuItem Header="Stop synchronization queue" Command="{Binding PauseAllCommand}" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Speed Limiter">
+                        <MenuItem Header="Turn ON" Command="{Binding ToggleSpeedLimiterCommand}" CommandParameter="True">
+                            <MenuItem.Icon>
+                                <TextBlock Text="✓" IsVisible="{Binding IsSpeedLimiterEnabled}" FontWeight="Bold" Foreground="#F59E0B" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Turn OFF" Command="{Binding ToggleSpeedLimiterCommand}" CommandParameter="False" />
+                        <Separator />
+                        <MenuItem Header="Settings..." Command="{Binding OpenSettingsDialogCommand}" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Options" Command="{Binding OpenSettingsDialogCommand}" />
                 </MenuItem>
-                <MenuItem Header="Registration">
+
+                <!-- 4. View Menu -->
+                <MenuItem Header="_View">
+                    <MenuItem Header="Hide categories" Command="{Binding ToggleCategoriesVisibilityCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="✓" IsVisible="{Binding !IsCategoriesVisible}" FontWeight="Bold" Foreground="#F59E0B" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Arrange files">
+                        <MenuItem Header="by Name" Command="{Binding SetSortCommand}" CommandParameter="Name" />
+                        <MenuItem Header="by Size" Command="{Binding SetSortCommand}" CommandParameter="Size" />
+                        <MenuItem Header="by Status" Command="{Binding SetSortCommand}" CommandParameter="Status" />
+                        <MenuItem Header="by Time left" Command="{Binding SetSortCommand}" CommandParameter="Time Left" />
+                        <MenuItem Header="by Transfer rate" Command="{Binding SetSortCommand}" CommandParameter="Transfer Rate" />
+                        <MenuItem Header="by Date added" Command="{Binding SetSortCommand}" CommandParameter="Date" />
+                    </MenuItem>
+                    <MenuItem Header="Toolbar">
+                        <MenuItem Header="Standard Buttons" Command="{Binding ToggleToolbarVisibilityCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="✓" IsVisible="{Binding IsToolbarVisible}" FontWeight="Bold" Foreground="#F59E0B" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="IDM tray icon">
+                        <MenuItem Header="Minimize to tray" Command="{Binding OpenSettingsDialogCommand}" />
+                        <MenuItem Header="Always show in tray" Command="{Binding OpenSettingsDialogCommand}" />
+                    </MenuItem>
+                    <MenuItem Header="Customize URL List..." Command="{Binding OpenSettingsDialogCommand}" />
+                    <MenuItem Header="Dark Mode support">
+                        <MenuItem.Icon>
+                            <TextBlock Text="✓" FontWeight="Bold" Foreground="#F59E0B" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Font">
+                        <MenuItem Header="Segoe UI (Default)" />
+                        <MenuItem Header="Consolas" />
+                        <MenuItem Header="Roboto" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Language">
+                        <MenuItem Header="English" />
+                        <MenuItem Header="Arabic (العربية)" />
+                        <MenuItem Header="French (Français)" />
+                        <MenuItem Header="German (Deutsch)" />
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- 5. Help Menu -->
+                <MenuItem Header="_Help">
+                    <MenuItem Header="Help contents" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.internetdownloadmanager.com/support/" />
+                    <MenuItem Header="Tutorials" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.internetdownloadmanager.com/support/tutorials.html" />
+                    <MenuItem Header="Scheduler and queues" Command="{Binding OpenSettingsDialogCommand}" />
+                    <MenuItem Header="Grabber Help" Command="{Binding OpenGrabberDialogCommand}" />
+                    <MenuItem Header="Tip of the Day..." Command="{Binding ShowAboutDialogCommand}" />
+                    <Separator />
+                    <MenuItem Header="IDM Home Page" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.internetdownloadmanager.com" />
+                    <MenuItem Header="Contact IDM Support" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.internetdownloadmanager.com/support/" />
+                    <Separator />
+                    <MenuItem Header="Check for updates..." Command="{Binding ShowAboutDialogCommand}" />
+                    <Separator />
+                    <MenuItem Header="About IDM" Command="{Binding ShowAboutDialogCommand}" />
+                    <MenuItem Header="Tell a friend" Command="{Binding ShowAboutDialogCommand}" />
+                </MenuItem>
+
+                <!-- 6. Registration Menu -->
+                <MenuItem Header="_Registration">
                     <MenuItem Header="Register Velo..." Command="{Binding ShowAboutDialogCommand}" />
+                    <MenuItem Header="Registration details" Command="{Binding ShowAboutDialogCommand}" />
                 </MenuItem>
             </Menu>
         </Border>
 
-        <!-- 2. IDM Ribbon Toolbar with vibrant neon action buttons -->
-        <Border DockPanel.Dock="Top" Background="#222328" BorderBrush="#2F323A" BorderThickness="0,0,0,1" Padding="8,5">
+        <!-- 2. Refined Obsidian & Gold Ribbon Toolbar -->
+        <Border DockPanel.Dock="Top" Background="#14161E" BorderBrush="#262834" BorderThickness="0,0,0,1" Padding="8,5" IsVisible="{Binding IsToolbarVisible}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="3">
                     <!-- Add URL -->
                     <Button Classes="ribbonBtn" Command="{Binding OpenAddDownloadDialogCommand}" ToolTip.Tip="Add download URL">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#06B6D4" BorderThickness="2" Background="#164E63" HorizontalAlignment="Center">
-                                <TextBlock Text="➕" FontSize="11" Foreground="#22D3EE" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#F59E0B" BorderThickness="1.5" Background="#261E0A" HorizontalAlignment="Center">
+                                <TextBlock Text="➕" FontSize="11" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Add URL" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
@@ -120,8 +275,8 @@
                     <!-- Resume -->
                     <Button Classes="ribbonBtn" Command="{Binding ResumeSelectedCommand}" ToolTip.Tip="Resume selected download">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#10B981" BorderThickness="2" Background="#064E3B" HorizontalAlignment="Center">
-                                <TextBlock Text="▶" FontSize="12" Foreground="#34D399" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#EAB308" BorderThickness="1.5" Background="#241E09" HorizontalAlignment="Center">
+                                <TextBlock Text="▶" FontSize="11" Foreground="#FDE047" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Resume" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
@@ -130,8 +285,8 @@
                     <!-- Stop -->
                     <Button Classes="ribbonBtn" Command="{Binding StopSelectedCommand}" ToolTip.Tip="Stop selected download">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#EF4444" BorderThickness="2" Background="#7F1D1D" HorizontalAlignment="Center">
-                                <TextBlock Text="⏹" FontSize="11" Foreground="#F87171" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="5" BorderBrush="#4B5563" BorderThickness="1.5" Background="#1E2028" HorizontalAlignment="Center">
+                                <TextBlock Text="⏹" FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Stop" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
@@ -140,8 +295,8 @@
                     <!-- Stop All -->
                     <Button Classes="ribbonBtn" Command="{Binding PauseAllCommand}" ToolTip.Tip="Stop all downloads">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#F97316" BorderThickness="2" Background="#7C2D12" HorizontalAlignment="Center">
-                                <TextBlock Text="🛑" FontSize="11" Foreground="#FB923C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="5" BorderBrush="#6B7280" BorderThickness="1.5" Background="#222530" HorizontalAlignment="Center">
+                                <TextBlock Text="🛑" FontSize="11" Foreground="#E2E8F0" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Stop All" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
@@ -150,7 +305,7 @@
                     <!-- Delete -->
                     <Button Classes="ribbonBtn" Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete selected download">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#EC4899" BorderThickness="2" Background="#831843" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#4B5563" BorderThickness="1.5" Background="#1B1D24" HorizontalAlignment="Center">
                                 <TextBlock Text="🗑️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Delete" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
@@ -160,19 +315,19 @@
                     <!-- Delete Completed -->
                     <Button Classes="ribbonBtn" Command="{Binding DeleteCompletedCommand}" ToolTip.Tip="Delete completed downloads from list">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#A855F7" BorderThickness="2" Background="#581C87" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#52525B" BorderThickness="1.5" Background="#1E2028" HorizontalAlignment="Center">
                                 <TextBlock Text="🧹" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Delete C..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <Separator Width="1" Height="36" Background="#3E424D" Margin="4,0" />
+                    <Separator Width="1" Height="34" Background="#2A2D3A" Margin="4,0" />
 
                     <!-- Options -->
                     <Button Classes="ribbonBtn" Command="{Binding OpenSettingsDialogCommand}" ToolTip.Tip="Options and settings">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#3B82F6" BorderThickness="2" Background="#1E3A8A" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#D97706" BorderThickness="1.5" Background="#241B08" HorizontalAlignment="Center">
                                 <TextBlock Text="⚙️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Options" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
@@ -182,7 +337,7 @@
                     <!-- Scheduler -->
                     <Button Classes="ribbonBtn" Command="{Binding OpenSettingsDialogCommand}" ToolTip.Tip="Scheduler &amp; Concurrency limits">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#F43F5E" BorderThickness="2" Background="#881337" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#F59E0B" BorderThickness="1.5" Background="#261E0A" HorizontalAlignment="Center">
                                 <TextBlock Text="⏰" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Scheduler" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
@@ -192,8 +347,8 @@
                     <!-- Start Queue -->
                     <Button Classes="ribbonBtn" Command="{Binding ResumeAllCommand}" ToolTip.Tip="Start download queue">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#10B981" BorderThickness="2" Background="#064E3B" HorizontalAlignment="Center">
-                                <TextBlock Text="▶" FontSize="11" Foreground="#34D399" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="5" BorderBrush="#EAB308" BorderThickness="1.5" Background="#241E09" HorizontalAlignment="Center">
+                                <TextBlock Text="▶" FontSize="11" Foreground="#FDE047" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Start Qu..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
@@ -202,7 +357,7 @@
                     <!-- Stop Queue -->
                     <Button Classes="ribbonBtn" Command="{Binding PauseAllCommand}" ToolTip.Tip="Stop download queue">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#F59E0B" BorderThickness="2" Background="#78350F" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="5" BorderBrush="#B45309" BorderThickness="1.5" Background="#221706" HorizontalAlignment="Center">
                                 <TextBlock Text="⏹" FontSize="11" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Stop Qu..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
@@ -210,9 +365,9 @@
                     </Button>
 
                     <!-- Grabber -->
-                    <Button Classes="ribbonBtn" Command="{Binding ShowAboutDialogCommand}" ToolTip.Tip="Site Grabber">
+                    <Button Classes="ribbonBtn" Command="{Binding OpenGrabberDialogCommand}" ToolTip.Tip="Site Grabber">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#8B5CF6" BorderThickness="2" Background="#4C1D95" HorizontalAlignment="Center">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#71717A" BorderThickness="1.5" Background="#1F212A" HorizontalAlignment="Center">
                                 <TextBlock Text="🌐" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Grabber" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
@@ -222,37 +377,37 @@
                     <!-- Tell a Friend / About -->
                     <Button Classes="ribbonBtn" Command="{Binding ShowAboutDialogCommand}" ToolTip.Tip="About Velo">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
-                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#FBBF24" BorderThickness="2" Background="#713F12" HorizontalAlignment="Center">
-                                <TextBlock Text="👍" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#F59E0B" BorderThickness="1.5" Background="#261E0A" HorizontalAlignment="Center">
+                                <TextBlock Text="⚡" FontSize="12" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="Tell a Frie..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                            <TextBlock Text="About" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <!-- Search Filter Box on Right -->
-                <TextBox Grid.Column="2" Width="200" Watermark="Search list..." Text="{Binding SearchQuery}" CornerRadius="4" Background="#17181C" BorderBrush="#353945" Foreground="#F8FAFC" VerticalAlignment="Center" Height="28" FontSize="12" />
+                <!-- Minimal Gold-Accented Search Filter Box on Right -->
+                <TextBox Grid.Column="2" Width="210" Watermark="Search downloads..." Text="{Binding SearchQuery}" CornerRadius="6" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" VerticalAlignment="Center" Height="29" FontSize="12" Padding="8,4" />
             </Grid>
         </Border>
 
         <!-- 3. Bottom Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#1A1B1F" BorderBrush="#2C2E36" BorderThickness="0,1,0,0" Padding="8,4">
+        <Border DockPanel.Dock="Bottom" Background="#0F1015" BorderBrush="#22242D" BorderThickness="0,1,0,0" Padding="12,5">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" Text="{Binding StatusBarInfo}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                    <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Streams: {0}/24'}" FontSize="11" Foreground="#94A3B8" />
-                    <TextBlock Text="{Binding TotalSpeedText, StringFormat='Speed: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
+                    <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Active Streams: {0}/24'}" FontSize="11" Foreground="#94A3B8" />
+                    <TextBlock Text="{Binding TotalSpeedText, StringFormat='Aggregate Speed: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- 4. Main Body: Left Categories Tree + Right IDM Downloads Table -->
-        <Grid ColumnDefinitions="210,4,*">
+        <Grid ColumnDefinitions="Auto,Auto,*">
             <!-- Left Categories Box -->
-            <Border Grid.Column="0" Background="#1A1C22" BorderBrush="#2D313C" BorderThickness="1" Margin="6,6,0,6" CornerRadius="2">
+            <Border Grid.Column="0" Width="215" Background="#111319" BorderBrush="#232631" BorderThickness="1" Margin="6,6,0,6" CornerRadius="4" IsVisible="{Binding IsCategoriesVisible}">
                 <DockPanel>
                     <!-- Header -->
-                    <Border DockPanel.Dock="Top" Background="#242832" Padding="8,5" BorderBrush="#2D313C" BorderThickness="0,0,0,1">
+                    <Border DockPanel.Dock="Top" Background="#181A22" Padding="10,6" BorderBrush="#232631" BorderThickness="0,0,0,1">
                         <TextBlock Text="Categories" FontWeight="Bold" FontSize="11" Foreground="#CBD5E1" />
                     </Border>
 
@@ -280,7 +435,7 @@
                                 <TextBlock Text="🎬 Video" />
                             </Button>
 
-                            <Separator Background="#2D313C" Margin="0,4" />
+                            <Separator Background="#232631" Margin="0,4" />
 
                             <!-- Status filters -->
                             <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Unfinished">
@@ -301,46 +456,46 @@
             </Border>
 
             <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Background="#18181A" ResizeDirection="Columns" />
+            <GridSplitter Grid.Column="1" Width="4" Background="#0E1015" ResizeDirection="Columns" IsVisible="{Binding IsCategoriesVisible}" />
 
             <!-- Right Downloads Data Table -->
-            <Border Grid.Column="2" Background="#17191E" BorderBrush="#2D313C" BorderThickness="1" Margin="0,6,6,6" CornerRadius="2">
+            <Border Grid.Column="2" Background="#101117" BorderBrush="#232631" BorderThickness="1" Margin="0,6,6,6" CornerRadius="4">
                 <DockPanel>
                     <!-- Table Column Header Row -->
-                    <Border DockPanel.Dock="Top" Background="#232732" BorderBrush="#2D313C" BorderThickness="0,0,0,1" Height="24">
+                    <Border DockPanel.Dock="Top" Background="#181A22" BorderBrush="#232631" BorderThickness="0,0,0,1" Height="26">
                         <Grid ColumnDefinitions="280,30,85,90,80,100,105,*">
                             <!-- File Name -->
-                            <Border Grid.Column="0" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="0" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="File Name" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Q (Queue) -->
-                            <Border Grid.Column="1" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="4,4">
+                            <Border Grid.Column="1" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="4,4">
                                 <TextBlock Text="Q" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Size -->
-                            <Border Grid.Column="2" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="2" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="Size" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Right" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Status -->
-                            <Border Grid.Column="3" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="3" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="Status" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Time left -->
-                            <Border Grid.Column="4" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="4" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="Time left" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Transfer rate -->
-                            <Border Grid.Column="5" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="5" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="Transfer rate" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Right" VerticalAlignment="Center" />
                             </Border>
 
                             <!-- Last Try Date -->
-                            <Border Grid.Column="6" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                            <Border Grid.Column="6" BorderBrush="#2A2D3A" BorderThickness="0,0,1,0" Padding="8,4">
                                 <TextBlock Text="Last Try Date ˅" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
                             </Border>
 
@@ -351,26 +506,85 @@
                         </Grid>
                     </Border>
 
+                    <!-- Interactive Empty State when no downloads are queued/present -->
+                    <Border IsVisible="{Binding !HasFilteredDownloads}" Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30">
+                        <StackPanel Spacing="14" HorizontalAlignment="Center">
+                            <Border Width="64" Height="64" CornerRadius="32" Background="#1F1B0B" BorderBrush="#F59E0B" BorderThickness="1.5" HorizontalAlignment="Center">
+                                <TextBlock Text="⚡" FontSize="28" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <TextBlock Text="No downloads found" FontSize="15" FontWeight="SemiBold" Foreground="#F8FAFC" HorizontalAlignment="Center" />
+                                <TextBlock Text="Add a new URL or trigger downloads from Google Chrome" FontSize="12" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <Button Command="{Binding OpenAddDownloadDialogCommand}" Background="#F59E0B" Foreground="#09090B" FontWeight="Bold" FontSize="12" Padding="20,7" CornerRadius="6" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <TextBlock Text="Add New Download" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Table Data Rows -->
-                    <ListBox ItemsSource="{Binding FilteredDownloads}" SelectedItem="{Binding SelectedDownload}" Background="Transparent" BorderThickness="0" DoubleTapped="OnRowDoubleTapped">
+                    <ListBox ItemsSource="{Binding FilteredDownloads}"
+                             SelectedItem="{Binding SelectedDownload}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             DoubleTapped="OnRowDoubleTapped"
+                             PointerPressed="OnListBoxPointerPressed"
+                             IsVisible="{Binding HasFilteredDownloads}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:DownloadItemViewModel">
-                                <Grid ColumnDefinitions="280,30,85,90,80,100,105,*">
+                                <Grid ColumnDefinitions="280,30,85,90,80,100,105,*" Background="Transparent" HorizontalAlignment="Stretch">
                                     <Grid.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Resume" Command="{Binding ResumeCommand}" />
-                                            <MenuItem Header="Pause / Stop" Command="{Binding PauseCommand}" />
+                                        <ContextMenu Classes="idmContextMenu">
+                                            <MenuItem Header="Open" Command="{Binding OpenFileCommand}" IsEnabled="{Binding CanOpen}" />
+                                            <MenuItem Header="Open with..." Command="{Binding OpenWithCommand}" IsEnabled="{Binding CanOpen}" />
+                                            <MenuItem Header="Open folder" Command="{Binding OpenFolderCommand}" />
                                             <Separator />
-                                            <MenuItem Header="Open File" Command="{Binding OpenFileCommand}" />
-                                            <MenuItem Header="Open Folder" Command="{Binding OpenFolderCommand}" />
+                                            <MenuItem Header="Move/Rename (Ctrl-M)" Command="{Binding MoveRenameCommand}" />
                                             <Separator />
-                                            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
-                                            <MenuItem Header="Details..." Command="{Binding OpenDetailsCommand}" />
+                                            <MenuItem Header="Redownload" Command="{Binding RedownloadCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="Resume Download" Command="{Binding ResumeDownloadCommand}" IsEnabled="{Binding CanResume}" />
+                                            <MenuItem Header="Stop Download" Command="{Binding StopDownloadCommand}" IsEnabled="{Binding CanStop}" />
+                                            <Separator />
+                                            <MenuItem Header="Refresh download address" Command="{Binding RefreshAddressCommand}" IsEnabled="{Binding CanRefreshAddress}" />
+                                            <Separator />
+                                            <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="Add to queue" IsEnabled="{Binding CanAddToQueue}">
+                                                <MenuItem Header="Main download queue" Command="{Binding AddToQueueCommand}" CommandParameter="Main download queue" />
+                                                <MenuItem Header="Synchronization queue" Command="{Binding AddToQueueCommand}" CommandParameter="Synchronization queue" />
+                                            </MenuItem>
+                                            <MenuItem Header="Delete from queue" Command="{Binding DeleteFromQueueCommand}" IsEnabled="{Binding CanDeleteFromQueue}" />
+                                            <Separator />
+                                            <MenuItem Header="On Double click">
+                                                <MenuItem Header="Open file" Command="{Binding SetDoubleClickActionCommand}" CommandParameter="OpenFile">
+                                                    <MenuItem.Icon>
+                                                        <TextBlock Text="✓" IsVisible="{Binding IsDoubleClickOpenFile}" FontWeight="Bold" Foreground="#F59E0B" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="Open download progress dialog" Command="{Binding SetDoubleClickActionCommand}" CommandParameter="OpenProgress">
+                                                    <MenuItem.Icon>
+                                                        <TextBlock Text="✓" IsVisible="{Binding IsDoubleClickOpenProgress}" FontWeight="Bold" Foreground="#F59E0B" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="Open folder" Command="{Binding SetDoubleClickActionCommand}" CommandParameter="OpenFolder">
+                                                    <MenuItem.Icon>
+                                                        <TextBlock Text="✓" IsVisible="{Binding IsDoubleClickOpenFolder}" FontWeight="Bold" Foreground="#F59E0B" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="Properties" Command="{Binding SetDoubleClickActionCommand}" CommandParameter="Properties">
+                                                    <MenuItem.Icon>
+                                                        <TextBlock Text="✓" IsVisible="{Binding IsDoubleClickProperties}" FontWeight="Bold" Foreground="#F59E0B" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="Properties" Command="{Binding OpenPropertiesCommand}" />
                                         </ContextMenu>
                                     </Grid.ContextMenu>
 
                                     <!-- 0: File Name with icon and strict ellipsis constraint -->
-                                    <Border Grid.Column="0" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <Border Grid.Column="0" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
                                         <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
                                             <TextBlock Grid.Column="0" Text="{Binding FileIconEmoji}" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="11" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" />
@@ -378,32 +592,32 @@
                                     </Border>
 
                                     <!-- 1: Q indicator -->
-                                    <Border Grid.Column="1" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="2,2">
+                                    <Border Grid.Column="1" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="2,2">
                                         <TextBlock Text="📁" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" />
                                     </Border>
 
                                     <!-- 2: Size -->
-                                    <Border Grid.Column="2" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <Border Grid.Column="2" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
                                         <TextBlock Text="{Binding FormattedSizeOnly}" FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                     </Border>
 
                                     <!-- 3: Status -->
-                                    <Border Grid.Column="3" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <Border Grid.Column="3" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
                                         <TextBlock Text="{Binding StatusDisplay}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                     </Border>
 
                                     <!-- 4: Time left -->
-                                    <Border Grid.Column="4" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <Border Grid.Column="4" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
                                         <TextBlock Text="{Binding TimeLeftText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
                                     </Border>
 
                                     <!-- 5: Transfer rate -->
-                                    <Border Grid.Column="5" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
-                                        <TextBlock Text="{Binding TransferRateText}" FontSize="11" Foreground="#10B981" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="5" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding TransferRateText}" FontSize="11" Foreground="#F59E0B" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                     </Border>
 
                                     <!-- 6: Last Try Date -->
-                                    <Border Grid.Column="6" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                    <Border Grid.Column="6" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
                                         <TextBlock Text="{Binding LastTryDateText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
                                     </Border>
 

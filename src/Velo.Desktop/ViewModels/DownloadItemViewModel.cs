@@ -1,11 +1,21 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Velo.Application;
+using Velo.Desktop.Views;
 using Velo.Domain;
 
 namespace Velo.Desktop.ViewModels;
+
+public enum DoubleClickActionType
+{
+    OpenFile,
+    OpenProgress,
+    OpenFolder,
+    Properties
+}
 
 public partial class DownloadItemViewModel : ViewModelBase
 {
@@ -39,6 +49,24 @@ public partial class DownloadItemViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isDetailsExpanded;
+
+    [ObservableProperty]
+    private string? _queueName;
+
+    [ObservableProperty]
+    private DoubleClickActionType _doubleClickAction = DoubleClickActionType.OpenProgress;
+
+    public bool IsDoubleClickOpenFile => DoubleClickAction == DoubleClickActionType.OpenFile;
+    public bool IsDoubleClickOpenProgress => DoubleClickAction == DoubleClickActionType.OpenProgress;
+    public bool IsDoubleClickOpenFolder => DoubleClickAction == DoubleClickActionType.OpenFolder;
+    public bool IsDoubleClickProperties => DoubleClickAction == DoubleClickActionType.Properties;
+
+    public bool CanOpen => Job.State == JobState.Completed || File.Exists(Job.TargetPath);
+    public bool CanResume => Job.State is JobState.Paused or JobState.Interrupted or JobState.Failed or JobState.Canceled or JobState.Created;
+    public bool CanStop => Job.State is JobState.Downloading or JobState.Queued;
+    public bool CanRefreshAddress => Job.State != JobState.Completed;
+    public bool CanAddToQueue => Job.State != JobState.Completed;
+    public bool CanDeleteFromQueue => Job.State == JobState.Queued || !string.IsNullOrEmpty(QueueName);
 
     public string OriginalUrl => Job.OriginalUrl;
     public string EffectiveUrl => Job.EffectiveUrl;
@@ -122,6 +150,11 @@ public partial class DownloadItemViewModel : ViewModelBase
     public void UpdateProgress(long currentBytes, double speedBytesPerSec)
     {
         Job.DownloadedBytes = currentBytes;
+        if (speedBytesPerSec > 0 && Job.State != JobState.Downloading)
+        {
+            Job.State = JobState.Downloading;
+        }
+
         ProgressPercentage = Job.ProgressPercentage;
         SizeInfo = FormatSize(currentBytes, Job.ExpectedBytes);
         SpeedText = FormatSpeed(speedBytesPerSec);
@@ -139,11 +172,7 @@ public partial class DownloadItemViewModel : ViewModelBase
             EtaText = "--";
         }
 
-        OnPropertyChanged(nameof(StatusDisplay));
-        OnPropertyChanged(nameof(TransferRateText));
-        OnPropertyChanged(nameof(TimeLeftText));
-        OnPropertyChanged(nameof(LastTryDateText));
-        OnPropertyChanged(nameof(FormattedSizeOnly));
+        NotifyStateChanges();
 
         // Update segments if present
         if (Job.Segments.Count > 0)
@@ -162,7 +191,23 @@ public partial class DownloadItemViewModel : ViewModelBase
         }
     }
 
+    private void NotifyStateChanges()
+    {
+        OnPropertyChanged(nameof(StatusDisplay));
+        OnPropertyChanged(nameof(TransferRateText));
+        OnPropertyChanged(nameof(TimeLeftText));
+        OnPropertyChanged(nameof(LastTryDateText));
+        OnPropertyChanged(nameof(FormattedSizeOnly));
+        OnPropertyChanged(nameof(CanOpen));
+        OnPropertyChanged(nameof(CanResume));
+        OnPropertyChanged(nameof(CanStop));
+        OnPropertyChanged(nameof(CanRefreshAddress));
+        OnPropertyChanged(nameof(CanAddToQueue));
+        OnPropertyChanged(nameof(CanDeleteFromQueue));
+    }
+
     public static event Action<DownloadItemViewModel>? DetailsRequested;
+    public static event Action<DownloadItemViewModel, bool>? RemoveRequested;
 
     [RelayCommand]
     public void OpenDetails()
@@ -183,8 +228,7 @@ public partial class DownloadItemViewModel : ViewModelBase
         StatusText = JobState.Paused.ToString();
         StatusColor = GetStatusColor(JobState.Paused);
         SpeedText = "0 KB/s";
-        OnPropertyChanged(nameof(StatusDisplay));
-        OnPropertyChanged(nameof(TransferRateText));
+        NotifyStateChanges();
     }
 
     [RelayCommand]
@@ -193,7 +237,7 @@ public partial class DownloadItemViewModel : ViewModelBase
         await _downloadService.ResumeDownloadAsync(Job.Id);
         StatusText = JobState.Downloading.ToString();
         StatusColor = GetStatusColor(JobState.Downloading);
-        OnPropertyChanged(nameof(StatusDisplay));
+        NotifyStateChanges();
     }
 
     [RelayCommand]
@@ -205,9 +249,37 @@ public partial class DownloadItemViewModel : ViewModelBase
     [RelayCommand]
     public void OpenFile()
     {
-        if (Job.State == JobState.Completed && File.Exists(Job.TargetPath))
+        if (File.Exists(Job.TargetPath))
         {
-            Process.Start(new ProcessStartInfo(Job.TargetPath) { UseShellExecute = true });
+            try
+            {
+                Process.Start(new ProcessStartInfo(Job.TargetPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to open file: {ex.Message}");
+            }
+        }
+        else
+        {
+            OpenFolder();
+        }
+    }
+
+    [RelayCommand]
+    public void OpenWith()
+    {
+        string path = Job.TargetPath;
+        if (File.Exists(path))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("rundll32.exe", $"shell32.dll,OpenAs_RunDLL \"{path}\"") { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to open with dialog: {ex.Message}");
+            }
         }
         else
         {
@@ -230,6 +302,112 @@ public partial class DownloadItemViewModel : ViewModelBase
             {
                 Process.Start("explorer.exe", $"\"{dir}\"");
             }
+        }
+    }
+
+    [RelayCommand]
+    public void MoveRename()
+    {
+        var window = new MoveRenameWindow(this, _downloadService);
+        ShowDialogWindow(window);
+    }
+
+    [RelayCommand]
+    public async Task RedownloadAsync()
+    {
+        await _downloadService.RedownloadAsync(Job.Id);
+        UpdateProgress(0, 0);
+        StatusText = JobState.Downloading.ToString();
+        StatusColor = GetStatusColor(JobState.Downloading);
+        NotifyStateChanges();
+    }
+
+    [RelayCommand]
+    public async Task ResumeDownloadAsync()
+    {
+        await ResumeAsync();
+    }
+
+    [RelayCommand]
+    public async Task StopDownloadAsync()
+    {
+        await PauseAsync();
+    }
+
+    [RelayCommand]
+    public void RefreshAddress()
+    {
+        var window = new RefreshAddressWindow(this, _downloadService);
+        ShowDialogWindow(window);
+    }
+
+    [RelayCommand]
+    public void Remove()
+    {
+        var window = new RemoveDownloadWindow(this, deleteFiles =>
+        {
+            RemoveRequested?.Invoke(this, deleteFiles);
+        });
+        ShowDialogWindow(window);
+    }
+
+    [RelayCommand]
+    public async Task AddToQueueAsync(string? queueName)
+    {
+        QueueName = queueName ?? "Main download queue";
+        if (Job.State != JobState.Downloading && Job.State != JobState.Completed)
+        {
+            Job.State = JobState.Queued;
+            StatusText = JobState.Queued.ToString();
+            StatusColor = GetStatusColor(JobState.Queued);
+            await _downloadService.UpdateJobAsync(Job);
+            NotifyStateChanges();
+        }
+    }
+
+    [RelayCommand]
+    public async Task DeleteFromQueueAsync()
+    {
+        QueueName = null;
+        if (Job.State == JobState.Queued)
+        {
+            Job.State = JobState.Paused;
+            StatusText = JobState.Paused.ToString();
+            StatusColor = GetStatusColor(JobState.Paused);
+            await _downloadService.UpdateJobAsync(Job);
+            NotifyStateChanges();
+        }
+    }
+
+    [RelayCommand]
+    public void SetDoubleClickAction(string? action)
+    {
+        if (Enum.TryParse<DoubleClickActionType>(action, ignoreCase: true, out var result))
+        {
+            DoubleClickAction = result;
+            OnPropertyChanged(nameof(IsDoubleClickOpenFile));
+            OnPropertyChanged(nameof(IsDoubleClickOpenProgress));
+            OnPropertyChanged(nameof(IsDoubleClickOpenFolder));
+            OnPropertyChanged(nameof(IsDoubleClickProperties));
+        }
+    }
+
+    [RelayCommand]
+    public void OpenProperties()
+    {
+        var window = new PropertiesWindow(this);
+        ShowDialogWindow(window);
+    }
+
+    private static void ShowDialogWindow(Window window)
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            window.ShowDialog(desktop.MainWindow);
+        }
+        else
+        {
+            window.Show();
         }
     }
 
@@ -271,12 +449,13 @@ public partial class DownloadItemViewModel : ViewModelBase
 
     private static string GetStatusColor(JobState state) => state switch
     {
-        JobState.Downloading => "#10B981", // Emerald Green
-        JobState.Completed => "#38BDF8",   // Light Sky Blue
-        JobState.Paused => "#F59E0B",      // Amber
+        JobState.Downloading => "#F59E0B", // Bright Amber Gold
+        JobState.Completed => "#10B981",   // Emerald Green
+        JobState.Paused => "#D97706",      // Deep Amber Gold
+        JobState.Queued => "#FBBF24",      // Light Gold
         JobState.Failed => "#EF4444",      // Red
-        JobState.Canceled => "#64748B",    // Gray
-        JobState.Interrupted => "#EC4899", // Pink
-        _ => "#94A3B8"                     // Slate
+        JobState.Canceled => "#71717A",    // Muted Zinc Gray
+        JobState.Interrupted => "#F43F5E", // Rose Red
+        _ => "#A1A1AA"                     // Neutral Zinc
     };
 }

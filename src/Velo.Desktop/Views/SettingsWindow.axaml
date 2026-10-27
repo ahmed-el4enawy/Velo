@@ -10,13 +10,13 @@
         Width="640" Height="560"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="#14171F">
+        Background="#0E1015">
 
     <Border Padding="24">
         <DockPanel>
             <!-- Header -->
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="0,0,0,20">
-                <Border Width="36" Height="36" CornerRadius="8" Background="#6366F1">
+                <Border Width="38" Height="38" CornerRadius="8" Background="#261E0A" BorderBrush="#F59E0B" BorderThickness="1.5">
                     <TextBlock Text="⚙️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel VerticalAlignment="Center">
@@ -27,52 +27,52 @@
 
             <!-- Actions Footer -->
             <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" Margin="0,20,0,0">
-                <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelCommand}" Background="#242938" Foreground="#E2E8F0" Padding="20,9" CornerRadius="6" Margin="0,0,10,0" />
-                <Button Grid.Column="2" Content="Save Preferences" Command="{Binding SaveCommand}" Background="#4F46E5" Foreground="White" FontWeight="SemiBold" Padding="24,9" CornerRadius="6" />
+                <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelCommand}" Background="#1A1C24" BorderBrush="#2D303E" BorderThickness="1" Foreground="#CBD5E1" Padding="20,8" CornerRadius="6" Margin="0,0,10,0" />
+                <Button Grid.Column="2" Content="Save Preferences" Command="{Binding SaveCommand}" Background="#F59E0B" BorderBrush="#FBBF24" BorderThickness="1" Foreground="#09090B" FontWeight="Bold" Padding="24,8" CornerRadius="6" />
             </Grid>
 
             <!-- Body Settings Controls -->
             <ScrollViewer>
                 <StackPanel Spacing="18">
                     <!-- Queue & Concurrency Group -->
-                    <Border Background="#1A1E29" BorderBrush="#252A36" BorderThickness="1" CornerRadius="8" Padding="16">
+                    <Border Background="#13151D" BorderBrush="#232633" BorderThickness="1" CornerRadius="8" Padding="16">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="CONCURRENCY &amp; SEGMENTATION" FontSize="11" FontWeight="Bold" Foreground="#818CF8" />
+                            <TextBlock Text="CONCURRENCY &amp; SEGMENTATION" FontSize="11" FontWeight="Bold" Foreground="#F59E0B" />
 
                             <Grid ColumnDefinitions="*,100">
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock Text="Max Concurrent Active Downloads" FontWeight="SemiBold" Foreground="#F8FAFC" FontSize="13" />
                                     <TextBlock Text="Excess jobs wait safely in the queue (1 - 10)" FontSize="11" Foreground="#94A3B8" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding MaxConcurrentDownloads}" HorizontalContentAlignment="Center" Background="#14171F" Foreground="#F8FAFC" CornerRadius="6" />
+                                <TextBox Grid.Column="1" Text="{Binding MaxConcurrentDownloads}" HorizontalContentAlignment="Center" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" CornerRadius="6" Height="30" />
                             </Grid>
 
-                            <Separator Background="#252A36" Margin="0,4" />
+                            <Separator Background="#232633" Margin="0,4" />
 
                             <Grid ColumnDefinitions="*,100">
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock Text="Segments per Download" FontWeight="SemiBold" Foreground="#F8FAFC" FontSize="13" />
                                     <TextBlock Text="Parallel HTTP ranges allocated per supported file (1 - 16)" FontSize="11" Foreground="#94A3B8" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding SegmentsPerDownload}" HorizontalContentAlignment="Center" Background="#14171F" Foreground="#F8FAFC" CornerRadius="6" />
+                                <TextBox Grid.Column="1" Text="{Binding SegmentsPerDownload}" HorizontalContentAlignment="Center" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" CornerRadius="6" Height="30" />
                             </Grid>
 
-                            <Separator Background="#252A36" Margin="0,4" />
+                            <Separator Background="#232633" Margin="0,4" />
 
                             <Grid ColumnDefinitions="*,100">
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock Text="Max Sockets per Host" FontWeight="SemiBold" Foreground="#F8FAFC" FontSize="13" />
                                     <TextBlock Text="Fairness ceiling preventing remote server bans (1 - 32)" FontSize="11" Foreground="#94A3B8" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding MaxConnectionsPerHost}" HorizontalContentAlignment="Center" Background="#14171F" Foreground="#F8FAFC" CornerRadius="6" />
+                                <TextBox Grid.Column="1" Text="{Binding MaxConnectionsPerHost}" HorizontalContentAlignment="Center" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" CornerRadius="6" Height="30" />
                             </Grid>
                         </StackPanel>
                     </Border>
 
                     <!-- Bandwidth Rate Limiter Group -->
-                    <Border Background="#1A1E29" BorderBrush="#252A36" BorderThickness="1" CornerRadius="8" Padding="16">
+                    <Border Background="#13151D" BorderBrush="#232633" BorderThickness="1" CornerRadius="8" Padding="16">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="BANDWIDTH LIMITER (TOKEN BUCKET)" FontSize="11" FontWeight="Bold" Foreground="#818CF8" />
+                            <TextBlock Text="BANDWIDTH LIMITER (TOKEN BUCKET)" FontSize="11" FontWeight="Bold" Foreground="#F59E0B" />
 
                             <CheckBox IsChecked="{Binding IsSpeedLimitEnabled}" Foreground="#F8FAFC" FontWeight="SemiBold">
                                 <TextBlock Text="Enable Global Download Speed Limit" />
@@ -84,7 +84,7 @@
                                     <TextBlock Text="Limits cumulative network bandwidth in KB/s" FontSize="11" Foreground="#94A3B8" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
-                                    <TextBox Text="{Binding SpeedLimitKb}" Width="90" HorizontalContentAlignment="Right" Background="#14171F" Foreground="#F8FAFC" CornerRadius="6" />
+                                    <TextBox Text="{Binding SpeedLimitKb}" Width="90" HorizontalContentAlignment="Right" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" CornerRadius="6" Height="30" />
                                     <TextBlock Text="KB/s" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="12" />
                                 </StackPanel>
                             </Grid>
@@ -92,9 +92,9 @@
                     </Border>
 
                     <!-- Clipboard & Storage Group -->
-                    <Border Background="#1A1E29" BorderBrush="#252A36" BorderThickness="1" CornerRadius="8" Padding="16">
+                    <Border Background="#13151D" BorderBrush="#232633" BorderThickness="1" CornerRadius="8" Padding="16">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="SYSTEM &amp; STORAGE" FontSize="11" FontWeight="Bold" Foreground="#818CF8" />
+                            <TextBlock Text="SYSTEM &amp; STORAGE" FontSize="11" FontWeight="Bold" Foreground="#F59E0B" />
 
                             <CheckBox IsChecked="{Binding ClipboardMonitoringEnabled}" Foreground="#F8FAFC">
                                 <StackPanel Spacing="2">
@@ -103,11 +103,11 @@
                                 </StackPanel>
                             </CheckBox>
 
-                            <Separator Background="#252A36" Margin="0,4" />
+                            <Separator Background="#232633" Margin="0,4" />
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Default Downloads Directory" FontWeight="SemiBold" Foreground="#F8FAFC" FontSize="13" />
-                                <TextBox Text="{Binding DefaultDownloadDirectory}" Background="#14171F" Foreground="#F8FAFC" CornerRadius="6" />
+                                <TextBox Text="{Binding DefaultDownloadDirectory}" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" CornerRadius="6" Height="30" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

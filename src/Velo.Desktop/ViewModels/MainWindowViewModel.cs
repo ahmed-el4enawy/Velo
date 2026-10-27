@@ -38,6 +38,23 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private DownloadItemViewModel? _selectedDownload;
 
+    [ObservableProperty]
+    private bool _isToolbarVisible = true;
+
+    [ObservableProperty]
+    private bool _isCategoriesVisible = true;
+
+    [ObservableProperty]
+    private string _sortBy = "Date";
+
+    [ObservableProperty]
+    private bool _isSpeedLimiterEnabled = false;
+
+    [ObservableProperty]
+    private bool _hasFilteredDownloads = false;
+
+    public bool HasDownloads => Downloads.Count > 0;
+
     public ObservableCollection<DownloadItemViewModel> Downloads { get; } = [];
     public ObservableCollection<DownloadItemViewModel> FilteredDownloads { get; } = [];
 
@@ -53,6 +70,19 @@ public partial class MainWindowViewModel : ViewModelBase
             DownloadItemViewModel.DetailsRequested += item =>
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => OpenDownloadProgressDialog(item));
+            };
+            DownloadItemViewModel.RemoveRequested += async (item, deleteFiles) =>
+            {
+                if (_downloadService != null)
+                {
+                    await _downloadService.DeleteDownloadAsync(item.Job.Id, deleteFiles: deleteFiles);
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        Downloads.Remove(item);
+                        ApplyFilter();
+                        SelectedDownload = FilteredDownloads.FirstOrDefault();
+                    });
+                }
             };
             _ = LoadInitialDownloadsAsync();
         }
@@ -98,6 +128,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var item = Downloads.FirstOrDefault(d => d.Job.Id == job.Id);
             if (item != null)
             {
+                item.Job.State = job.State;
                 item.UpdateProgress(job.DownloadedBytes, 0);
                 ApplyFilter();
                 UpdateAggregateMetrics();
@@ -194,6 +225,37 @@ public partial class MainWindowViewModel : ViewModelBase
         progressWindow.Show();
     }
 
+    public void ExecuteDoubleClickAction(DownloadItemViewModel item)
+    {
+        switch (item.DoubleClickAction)
+        {
+            case DoubleClickActionType.OpenFile:
+                item.OpenFileCommand.Execute(null);
+                break;
+            case DoubleClickActionType.OpenProgress:
+                OpenDownloadProgressDialog(item);
+                break;
+            case DoubleClickActionType.OpenFolder:
+                item.OpenFolderCommand.Execute(null);
+                break;
+            case DoubleClickActionType.Properties:
+                item.OpenPropertiesCommand.Execute(null);
+                break;
+        }
+    }
+
+    [RelayCommand]
+    public void MoveRenameSelected()
+    {
+        SelectedDownload?.MoveRenameCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    public void RemoveSelectedWithDialog()
+    {
+        SelectedDownload?.RemoveCommand.Execute(null);
+    }
+
     [RelayCommand]
     private async Task PasteAndAddDownloadAsync()
     {
@@ -261,13 +323,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteSelectedAsync()
     {
-        if (SelectedDownload != null && _downloadService != null)
+        if (SelectedDownload != null)
         {
-            var target = SelectedDownload;
-            await _downloadService.DeleteDownloadAsync(target.Job.Id, deleteFiles: false);
-            Downloads.Remove(target);
-            ApplyFilter();
-            SelectedDownload = FilteredDownloads.FirstOrDefault();
+            SelectedDownload.RemoveCommand.Execute(null);
+            return;
+        }
+
+        if (Downloads.Any())
+        {
+            var first = Downloads.FirstOrDefault();
+            first?.RemoveCommand.Execute(null);
         }
     }
 
@@ -300,9 +365,185 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void CloseApp()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            if (desktop.MainWindow is MainWindow win)
+            {
+                win.ForceExit();
+            }
+            else
+            {
+                desktop.Shutdown();
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void OpenGrabberDialog()
+    {
+        var dialog = new GrabberWindow(this);
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            dialog.ShowDialog(desktop.MainWindow!);
+        }
+    }
+
+    [RelayCommand]
     private void ShowAboutDialog()
     {
-        OpenSettingsDialog();
+        var dialog = new AboutWindow();
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            dialog.ShowDialog(desktop.MainWindow!);
+        }
+    }
+
+    [RelayCommand]
+    private async Task RedownloadSelectedAsync()
+    {
+        if (SelectedDownload != null)
+        {
+            await SelectedDownload.RedownloadCommand.ExecuteAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    private void SetSort(string? criterion)
+    {
+        if (!string.IsNullOrEmpty(criterion))
+        {
+            SortBy = criterion;
+            ApplyFilter();
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleSpeedLimiter(string? enable)
+    {
+        if (bool.TryParse(enable, out var state))
+        {
+            IsSpeedLimiterEnabled = state;
+        }
+        else
+        {
+            IsSpeedLimiterEnabled = !IsSpeedLimiterEnabled;
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleCategoriesVisibility()
+    {
+        IsCategoriesVisible = !IsCategoriesVisible;
+    }
+
+    [RelayCommand]
+    private void ToggleToolbarVisibility()
+    {
+        IsToolbarVisible = !IsToolbarVisible;
+    }
+
+    [RelayCommand]
+    private void FocusSearch()
+    {
+        // Focus or select search query
+        StatusBarInfo = "Search filter activated. Type to find downloads.";
+    }
+
+    [RelayCommand]
+    private void OpenUrl(string? url)
+    {
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to open URL: {ex.Message}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportDownloadsAsync(string? format)
+    {
+        try
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow != null)
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(desktop.MainWindow);
+                if (topLevel != null)
+                {
+                    var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+                    {
+                        Title = "Export Downloads List",
+                        DefaultExtension = format == "txt" ? "txt" : "ef2",
+                        SuggestedFileName = $"velo_downloads_{DateTime.Now:yyyyMMdd}.{format ?? "txt"}"
+                    });
+
+                    if (file != null)
+                    {
+                        var urls = Downloads.Select(d => d.Job.OriginalUrl);
+                        await System.IO.File.WriteAllLinesAsync(file.Path.LocalPath, urls);
+                        StatusBarInfo = $"Exported {Downloads.Count} downloads to {file.Name}";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusBarInfo = $"Export failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportDownloadsAsync()
+    {
+        try
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow != null)
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(desktop.MainWindow);
+                if (topLevel != null)
+                {
+                    var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+                    {
+                        Title = "Import Downloads List",
+                        AllowMultiple = false
+                    });
+
+                    if (files.Count > 0)
+                    {
+                        var lines = await System.IO.File.ReadAllLinesAsync(files[0].Path.LocalPath);
+                        int count = 0;
+                        foreach (var rawLine in lines)
+                        {
+                            var line = rawLine.Trim();
+                            if (line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                line.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (_downloadService != null)
+                                {
+                                    await _downloadService.CreateDownloadAsync(line);
+                                    count++;
+                                }
+                            }
+                        }
+                        await LoadInitialDownloadsAsync();
+                        StatusBarInfo = $"Imported and scheduled {count} downloads.";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusBarInfo = $"Import failed: {ex.Message}";
+        }
     }
 
     private void ApplyFilter()
@@ -332,11 +573,23 @@ public partial class MainWindowViewModel : ViewModelBase
             _ => query
         };
 
+        query = SortBy switch
+        {
+            "Name" => query.OrderBy(d => d.DisplayName),
+            "Size" => query.OrderByDescending(d => d.Job.ExpectedBytes ?? 0),
+            "Status" => query.OrderBy(d => d.Job.State),
+            "Time Left" => query.OrderBy(d => d.EtaText),
+            "Transfer Rate" => query.OrderByDescending(d => d.SpeedText),
+            "Date" or _ => query.OrderByDescending(d => d.Job.CreatedAt)
+        };
+
         foreach (var item in query)
         {
             FilteredDownloads.Add(item);
         }
 
+        HasFilteredDownloads = FilteredDownloads.Count > 0;
+        OnPropertyChanged(nameof(HasDownloads));
         UpdateAggregateMetrics();
     }
 }

@@ -51,4 +51,6 @@ public class FakeDownloadService : IDownloadService
         return Task.CompletedTask;
     }
     public Task<IReadOnlyList<DownloadJob>> GetAllDownloadsAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<DownloadJob>>(Jobs);
+    public Task RedownloadAsync(Guid downloadId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task UpdateJobAsync(DownloadJob job, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }

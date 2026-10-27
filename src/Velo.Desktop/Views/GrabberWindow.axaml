@@ -1,0 +1,95 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Velo.Desktop.Views.GrabberWindow"
+        Title="Site Grabber — Velo"
+        Icon="/Assets/Velo.ico"
+        Width="520" Height="340"
+        MinWidth="460" MinHeight="300"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#0E1015"
+        Foreground="#F1F5F9">
+
+    <Window.Styles>
+        <Style Selector="Button.dialogBtn">
+            <Setter Property="Background" Value="#1A1C24" />
+            <Setter Property="BorderBrush" Value="#2D303E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#CBD5E1" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.dialogBtn:pointerover">
+            <Setter Property="Background" Value="#252217" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
+        </Style>
+        <Style Selector="Button.primaryBtn">
+            <Setter Property="Background" Value="#F59E0B" />
+            <Setter Property="BorderBrush" Value="#FBBF24" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#09090B" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.primaryBtn:pointerover">
+            <Setter Property="Background" Value="#D97706" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="20,18">
+        <!-- Footer -->
+        <Border DockPanel.Dock="Bottom" Margin="0,18,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Classes="primaryBtn" Content="Start Project" Click="OnStartClick" />
+                <Button Classes="dialogBtn" Content="Cancel" Click="OnCancelClick" />
+            </StackPanel>
+        </Border>
+
+        <!-- Body -->
+        <StackPanel Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Border Width="36" Height="36" CornerRadius="18" Background="#261E0A" BorderBrush="#F59E0B" BorderThickness="1.5">
+                    <TextBlock Text="🌐" FontSize="16" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Site Grabber Wizard" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                    <TextBlock Text="Download all files or specific media types from a website URL" FontSize="11" Foreground="#94A3B8" />
+                </StackPanel>
+            </StackPanel>
+
+            <Separator Background="#232631" Margin="0,4" />
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Start page / website address:" FontSize="12" Foreground="#94A3B8" />
+                <TextBox x:Name="UrlBox" Height="30" FontSize="12" Background="#0C0E13" BorderBrush="#2A2D3A" Foreground="#F8FAFC" Watermark="https://example.com/gallery" CornerRadius="4" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Explore depth:" FontSize="12" Foreground="#CBD5E1" />
+                <ComboBox x:Name="DepthCombo" SelectedIndex="0" Background="#141416" BorderBrush="#3F4452" Foreground="#F8FAFC" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Explore only the specified web page" />
+                    <ComboBoxItem Content="Explore page and links within domain (Depth: 1)" />
+                    <ComboBoxItem Content="Explore entire site (All levels)" />
+                </ComboBox>
+            </StackPanel>
+
+            <TextBlock x:Name="StatusMessage" Text="" FontSize="11" Foreground="#10B981" />
+        </StackPanel>
+    </DockPanel>
+</Window>

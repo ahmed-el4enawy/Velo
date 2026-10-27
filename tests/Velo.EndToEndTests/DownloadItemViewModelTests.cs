@@ -75,4 +75,69 @@ public class DownloadItemViewModelTests
         vm.SpeedText.Should().Contain("2.5 MB/s");
         vm.EtaText.Should().Contain("2s left");
     }
+
+    [Fact]
+    public void ContextMenu_StateProperties_ShouldMatchExpectedStates()
+    {
+        var jobCompleted = new DownloadJob { State = JobState.Completed };
+        var vmCompleted = new DownloadItemViewModel(jobCompleted, _downloadService);
+        vmCompleted.CanOpen.Should().BeTrue();
+        vmCompleted.CanResume.Should().BeFalse();
+        vmCompleted.CanStop.Should().BeFalse();
+        vmCompleted.CanRefreshAddress.Should().BeFalse();
+
+        var jobPaused = new DownloadJob { State = JobState.Paused };
+        var vmPaused = new DownloadItemViewModel(jobPaused, _downloadService);
+        vmPaused.CanResume.Should().BeTrue();
+        vmPaused.CanStop.Should().BeFalse();
+        vmPaused.CanRefreshAddress.Should().BeTrue();
+
+        var jobDownloading = new DownloadJob { State = JobState.Downloading };
+        var vmDownloading = new DownloadItemViewModel(jobDownloading, _downloadService);
+        vmDownloading.CanResume.Should().BeFalse();
+        vmDownloading.CanStop.Should().BeTrue();
+        vmDownloading.CanRefreshAddress.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ContextMenu_QueueOperations_ShouldUpdateQueueState()
+    {
+        var job = new DownloadJob { State = JobState.Paused };
+        var vm = new DownloadItemViewModel(job, _downloadService);
+
+        vm.CanDeleteFromQueue.Should().BeFalse();
+
+        await vm.AddToQueueCommand.ExecuteAsync("Main download queue");
+        vm.QueueName.Should().Be("Main download queue");
+        vm.Job.State.Should().Be(JobState.Queued);
+        vm.CanDeleteFromQueue.Should().BeTrue();
+
+        await vm.DeleteFromQueueCommand.ExecuteAsync(null);
+        vm.QueueName.Should().BeNull();
+        vm.Job.State.Should().Be(JobState.Paused);
+        vm.CanDeleteFromQueue.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ContextMenu_DoubleClickAction_ShouldUpdatePreferences()
+    {
+        var job = new DownloadJob();
+        var vm = new DownloadItemViewModel(job, _downloadService);
+
+        vm.DoubleClickAction.Should().Be(DoubleClickActionType.OpenProgress);
+        vm.IsDoubleClickOpenProgress.Should().BeTrue();
+
+        vm.SetDoubleClickActionCommand.Execute("OpenFile");
+        vm.DoubleClickAction.Should().Be(DoubleClickActionType.OpenFile);
+        vm.IsDoubleClickOpenFile.Should().BeTrue();
+        vm.IsDoubleClickOpenProgress.Should().BeFalse();
+
+        vm.SetDoubleClickActionCommand.Execute("OpenFolder");
+        vm.DoubleClickAction.Should().Be(DoubleClickActionType.OpenFolder);
+        vm.IsDoubleClickOpenFolder.Should().BeTrue();
+
+        vm.SetDoubleClickActionCommand.Execute("Properties");
+        vm.DoubleClickAction.Should().Be(DoubleClickActionType.Properties);
+        vm.IsDoubleClickProperties.Should().BeTrue();
+    }
 }

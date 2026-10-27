@@ -11,62 +11,75 @@
         Width="580" Height="340"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
-        Background="#2E2E2E"
-        Foreground="#F0F0F0">
+        Background="#0E1015"
+        Foreground="#F1F5F9">
 
     <Window.Styles>
         <Style Selector="Button.idmActionBtn">
-            <Setter Property="Background" Value="#383838" />
-            <Setter Property="BorderBrush" Value="#666666" />
+            <Setter Property="Background" Value="#1A1C24" />
+            <Setter Property="BorderBrush" Value="#2D303E" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="#F8FAFC" />
             <Setter Property="FontSize" Value="11" />
-            <Setter Property="Padding" Value="16,5" />
-            <Setter Property="CornerRadius" Value="2" />
-            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.idmActionBtn:pointerover">
-            <Setter Property="Background" Value="#484848" />
-            <Setter Property="BorderBrush" Value="#888888" />
+            <Setter Property="Background" Value="#252217" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
         </Style>
         <Style Selector="Button.idmDefaultBtn">
-            <Setter Property="BorderBrush" Value="#E2E8F0" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="#F59E0B" />
+            <Setter Property="BorderBrush" Value="#FBBF24" />
+            <Setter Property="Foreground" Value="#09090B" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Button.idmDefaultBtn:pointerover">
+            <Setter Property="Background" Value="#D97706" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
+            <Setter Property="Foreground" Value="#09090B" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#222222" />
-            <Setter Property="BorderBrush" Value="#555555" />
+            <Setter Property="Background" Value="#12141A" />
+            <Setter Property="BorderBrush" Value="#252733" />
             <Setter Property="Foreground" Value="#F8FAFC" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="CornerRadius" Value="2" />
-            <Setter Property="Height" Value="26" />
-            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,4" />
         </Style>
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#222222" />
-            <Setter Property="BorderBrush" Value="#555555" />
+            <Setter Property="Background" Value="#12141A" />
+            <Setter Property="BorderBrush" Value="#252733" />
             <Setter Property="Foreground" Value="#F8FAFC" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="CornerRadius" Value="2" />
-            <Setter Property="Height" Value="26" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Height" Value="28" />
         </Style>
     </Window.Styles>
 
-    <Border Padding="14,12">
+    <Border Padding="18,14">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="75,*">
             <!-- 1. URL -->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="URL" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="URL" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,8" FontSize="12" Foreground="#94A3B8" />
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Url}" Margin="0,0,0,8" />
 
             <!-- 2. Category -->
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Category" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Category" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,8" FontSize="12" Foreground="#94A3B8" />
             <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
                 <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Width="250" />
                 <Button Classes="idmActionBtn" Content="+" Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ToolTip.Tip="Add category" />
             </StackPanel>
 
             <!-- 3. Save As -->
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Save As" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,8" FontSize="12" Foreground="#E2E8F0" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Save As" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,8" FontSize="12" Foreground="#94A3B8" />
             <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto,75" Margin="0,0,0,8">
                 <TextBox Grid.Column="0" Text="{Binding SaveAsPath}" Margin="0,0,6,0" />
                 <Button Grid.Column="1" Classes="idmActionBtn" Content="..." Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0,0,8,0" Click="OnBrowseClick" />
@@ -79,21 +92,21 @@
             </Grid>
 
             <!-- 4. Remember Path GroupBox -->
-            <Border Grid.Row="3" Grid.Column="1" BorderBrush="#555555" BorderThickness="1" CornerRadius="2" Margin="0,0,75,8" Padding="10,6,10,8">
+            <Border Grid.Row="3" Grid.Column="1" BorderBrush="#252733" BorderThickness="1" CornerRadius="4" Margin="0,0,75,8" Padding="12,8,12,10" Background="#12141A">
                 <StackPanel Spacing="6">
-                    <CheckBox IsChecked="{Binding RememberCategoryPath}" Margin="0,-14,0,0" Background="#2E2E2E">
-                        <TextBlock Text="{Binding SelectedCategory, StringFormat='Remember this path for &quot;{0}&quot; category'}" FontSize="11" Foreground="#E2E8F0" Background="#2E2E2E" Padding="4,0" />
+                    <CheckBox IsChecked="{Binding RememberCategoryPath}" Margin="0,-16,0,0" Background="#12141A">
+                        <TextBlock Text="{Binding SelectedCategory, StringFormat='Remember this path for &quot;{0}&quot; category'}" FontSize="11" Foreground="#CBD5E1" Background="#12141A" Padding="4,0" />
                     </CheckBox>
-                    <TextBox Text="{Binding CategoryFolderPath}" IsReadOnly="True" FontSize="11" Height="24" Background="#222222" BorderBrush="#444444" Foreground="#94A3B8" />
+                    <TextBox Text="{Binding CategoryFolderPath}" IsReadOnly="True" FontSize="11" Height="26" Background="#0C0E13" BorderBrush="#20222B" Foreground="#94A3B8" />
                 </StackPanel>
             </Border>
 
             <!-- 5. Description -->
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Description" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,12" FontSize="12" Foreground="#E2E8F0" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Description" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,12" FontSize="12" Foreground="#94A3B8" />
             <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Description}" Margin="0,0,75,12" />
 
             <!-- 6. Footer Buttons -->
-            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14" VerticalAlignment="Bottom" Margin="0,4,0,2">
+            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14" VerticalAlignment="Bottom" Margin="0,6,0,2">
                 <Button Classes="idmActionBtn" Content="Download Later" Command="{Binding DownloadLaterCommand}" Width="125" />
                 <Button Classes="idmActionBtn idmDefaultBtn" Content="Start Download" Command="{Binding StartDownloadCommand}" Width="125" IsDefault="True" />
                 <Button Classes="idmActionBtn" Content="Cancel" Click="OnCancelClick" Width="100" />

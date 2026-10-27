@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Velo.Desktop.Views.RemoveDownloadWindow"
+        Title="Remove Download"
+        Icon="/Assets/Velo.ico"
+        Width="460" Height="220"
+        MinWidth="420" MinHeight="200"
+        WindowStartupLocation="CenterOwner"
+        CanResize="false"
+        Background="#0E1015"
+        Foreground="#F1F5F9">
+
+    <Window.Styles>
+        <Style Selector="Button.dialogBtn">
+            <Setter Property="Background" Value="#1A1C24" />
+            <Setter Property="BorderBrush" Value="#2D303E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#CBD5E1" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.dialogBtn:pointerover">
+            <Setter Property="Background" Value="#252217" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
+        </Style>
+        <Style Selector="Button.dangerBtn">
+            <Setter Property="Background" Value="#DC2626" />
+            <Setter Property="BorderBrush" Value="#EF4444" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+        <Style Selector="Button.dangerBtn:pointerover">
+            <Setter Property="Background" Value="#B91C1C" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="18,16">
+        <!-- Bottom Buttons -->
+        <Border DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Classes="dangerBtn" Content="Remove" Click="OnRemoveClick" />
+                <Button Classes="dialogBtn" Content="Cancel" Click="OnCancelClick" />
+            </StackPanel>
+        </Border>
+
+        <!-- Fields -->
+        <StackPanel Spacing="10" VerticalAlignment="Center">
+            <TextBlock Text="Remove Download" FontSize="15" FontWeight="Bold" Foreground="#F59E0B" />
+            
+            <TextBlock x:Name="PromptText"
+                       Text="Are you sure you want to remove this download from the list?"
+                       FontSize="12"
+                       Foreground="#E2E8F0"
+                       TextWrapping="Wrap" />
+
+            <TextBlock x:Name="FileNameText"
+                       Text=""
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       Foreground="#38BDF8"
+                       TextTrimming="CharacterEllipsis" />
+
+            <CheckBox x:Name="DeleteFilesCheck"
+                      Content="Also delete downloaded / incomplete file(s) from disk"
+                      FontSize="11"
+                      Foreground="#CBD5E1"
+                      Margin="0,4,0,0" />
+        </StackPanel>
+    </DockPanel>
+</Window>
