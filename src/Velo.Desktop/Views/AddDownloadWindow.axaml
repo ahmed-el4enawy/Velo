@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Velo.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="380"
+        x:Class="Velo.Desktop.Views.AddDownloadWindow"
+        x:DataType="vm:AddDownloadWindowViewModel"
+        Title="Add Download — Velo"
+        Width="620" Height="400"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#14171F">
+
+    <Border Padding="24">
+        <StackPanel Spacing="16">
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Border Width="32" Height="32" CornerRadius="8" Background="#4F46E5">
+                    <TextBlock Text="➕" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="New Download" FontWeight="Bold" FontSize="16" Foreground="#F8FAFC" />
+                    <TextBlock Text="Enter file URL to accelerate with Velo multi-stream engine" FontSize="11" Foreground="#94A3B8" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- URL Input with Inspect Button -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="DOWNLOAD URL" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" Text="{Binding Url}" Watermark="https://example.com/file.zip" CornerRadius="6,0,0,6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
+                    <Button Grid.Column="1" Command="{Binding InspectUrlCommand}" Content="Inspect" CornerRadius="0,6,6,0" Background="#374151" Foreground="#F8FAFC" Padding="16,8" />
+                </Grid>
+            </StackPanel>
+
+            <!-- Probe Status Message -->
+            <Border Background="#1A202C" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#38BDF8" TextWrapping="Wrap" />
+            </Border>
+
+            <!-- File Name & Destination -->
+            <Grid ColumnDefinitions="*,*">
+                <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,8,0">
+                    <TextBlock Text="FILE NAME" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                    <TextBox Text="{Binding FileName}" Watermark="filename.ext" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="6" Margin="8,0,0,0">
+                    <TextBlock Text="SAVE FOLDER" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                    <TextBox Text="{Binding DestinationFolder}" Watermark="Save location" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Actions Footer -->
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
+                <Button Grid.Column="1" Content="Cancel" Click="OnCancelClick" Background="#242938" Foreground="#E2E8F0" Padding="20,9" CornerRadius="6" Margin="0,0,10,0" />
+                <Button Grid.Column="2" Content="Start Download" Command="{Binding StartDownloadCommand}" IsEnabled="{Binding CanStart}" Background="#4F46E5" Foreground="White" FontWeight="SemiBold" Padding="24,9" CornerRadius="6" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

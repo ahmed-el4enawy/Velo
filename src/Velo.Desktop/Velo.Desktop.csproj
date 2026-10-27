@@ -9,6 +9,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Velo.Application\Velo.Application.csproj" />
     <ProjectReference Include="..\Velo.Domain\Velo.Domain.csproj" />
+    <ProjectReference Include="..\Velo.DownloadEngine\Velo.DownloadEngine.csproj" />
+    <ProjectReference Include="..\Velo.Infrastructure\Velo.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
