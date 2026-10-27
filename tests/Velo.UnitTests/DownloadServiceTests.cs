@@ -16,7 +16,7 @@ public class DownloadServiceTests
 
     public DownloadServiceTests()
     {
-        _service = new DownloadService(_mockProbe.Object, _mockEngine.Object, _mockRepo.Object);
+        _service = new DownloadService(_mockProbe.Object, _mockEngine.Object, _mockRepo.Object, defaultSegmentCount: 4);
     }
 
     [Fact]
@@ -64,5 +64,70 @@ public class DownloadServiceTests
 
         existingJob.State.Should().Be(JobState.Paused);
         _mockRepo.Verify(r => r.UpdateDownloadAsync(existingJob, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task StartDownloadAsync_CompletedJob_ShouldNotExecuteEngine()
+    {
+        var jobId = Guid.NewGuid();
+        var completedJob = new DownloadJob
+        {
+            Id = jobId,
+            State = JobState.Completed,
+            ExpectedBytes = 1000,
+            DownloadedBytes = 1000
+        };
+
+        _mockRepo.Setup(r => r.GetDownloadByIdAsync(jobId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(completedJob);
+
+        await _service.StartDownloadAsync(jobId);
+
+        _mockEngine.Verify(e => e.ExecuteDownloadAsync(It.IsAny<DownloadJob>(), It.IsAny<IProgress<long>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task StartDownloadAsync_WhenPaused_ShouldTransitionToPausedAndSave()
+    {
+        var jobId = Guid.NewGuid();
+        var job = new DownloadJob
+        {
+            Id = jobId,
+            State = JobState.Created,
+            ExpectedBytes = 1000
+        };
+
+        var seg = new DownloadSegment
+        {
+            DownloadId = jobId,
+            StartByte = 0,
+            EndByte = 999,
+            NextByte = 400
+        };
+        job.Segments.Add(seg);
+
+        _mockRepo.Setup(r => r.GetDownloadByIdAsync(jobId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(job);
+
+        _mockEngine.Setup(e => e.ExecuteDownloadAsync(job, It.IsAny<IProgress<long>>(), It.IsAny<CancellationToken>()))
+            .Returns<DownloadJob, IProgress<long>, CancellationToken>(async (j, p, ct) =>
+            {
+                // Simulate running and then cancel
+                while (!ct.IsCancellationRequested)
+                {
+                    await Task.Delay(10, ct);
+                }
+                ct.ThrowIfCancellationRequested();
+            });
+
+        var startTask = _service.StartDownloadAsync(jobId);
+        await Task.Delay(50); // let it start
+        await _service.PauseDownloadAsync(jobId);
+
+        await Task.Delay(100); // allow background worker to process cancellation
+
+        job.State.Should().Be(JobState.Paused);
+        job.DownloadedBytes.Should().Be(400);
+        _mockRepo.Verify(r => r.UpdateDownloadAsync(job, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 }

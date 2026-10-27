@@ -138,4 +138,49 @@ public class SqliteDownloadRepositoryTests : IDisposable
         var retrieved = await _repository.GetDownloadByIdAsync(job.Id);
         retrieved!.State.Should().Be(JobState.Interrupted, "Active downloads from unexpected shutdown must transition to Interrupted");
     }
+
+    [Fact]
+    public async Task UpdateDownloadAsync_ShouldPersistSegmentProgressAndState()
+    {
+        var job = new DownloadJob
+        {
+            OriginalUrl = "https://example.com/dataset.tar",
+            EffectiveUrl = "https://example.com/dataset.tar",
+            TargetPath = "C:\\Downloads\\dataset.tar",
+            TempPath = "C:\\Downloads\\dataset.tar.velo.part",
+            DisplayName = "dataset.tar",
+            Host = "example.com",
+            ExpectedBytes = 2000,
+            State = JobState.Downloading
+        };
+
+        var seg = new DownloadSegment
+        {
+            DownloadId = job.Id,
+            Index = 0,
+            StartByte = 0,
+            EndByte = 1999,
+            NextByte = 1000,
+            State = SegmentState.Downloading
+        };
+        job.Segments.Add(seg);
+        await _repository.AddDownloadAsync(job);
+
+        // Advance segment and complete it
+        seg.NextByte = 2000;
+        seg.State = SegmentState.Completed;
+        job.State = JobState.Completed;
+        job.DownloadedBytes = 2000;
+
+        await _repository.UpdateDownloadAsync(job);
+
+        var retrieved = await _repository.GetDownloadByIdAsync(job.Id);
+        retrieved!.Segments.Should().HaveCount(1);
+        retrieved.Segments[0].NextByte.Should().Be(2000);
+        retrieved.Segments[0].IsCompleted.Should().BeTrue();
+
+        var all = await _repository.GetAllDownloadsAsync();
+        all.First(d => d.Id == job.Id).Segments.Should().HaveCount(1);
+        all.First(d => d.Id == job.Id).Segments[0].IsCompleted.Should().BeTrue();
+    }
 }

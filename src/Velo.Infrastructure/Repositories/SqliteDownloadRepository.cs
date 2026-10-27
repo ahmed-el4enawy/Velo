@@ -90,31 +90,85 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
     {
         using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
+        using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            UPDATE downloads SET
-                effective_url = @effective_url,
-                target_path = @target_path,
-                downloaded_bytes = @downloaded_bytes,
-                state = @state,
-                failure_code = @failure_code,
-                failure_reason = @failure_reason,
-                updated_at = @updated_at,
-                finished_at = @finished_at
-            WHERE id = @id;";
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.Transaction = transaction;
+            cmd.CommandText = @"
+                UPDATE downloads SET
+                    original_url = @original_url,
+                    effective_url = @effective_url,
+                    display_name = @display_name,
+                    host = @host,
+                    target_path = @target_path,
+                    temp_path = @temp_path,
+                    expected_bytes = @expected_bytes,
+                    downloaded_bytes = @downloaded_bytes,
+                    strong_etag = @strong_etag,
+                    last_modified = @last_modified,
+                    range_supported = @range_supported,
+                    state = @state,
+                    failure_code = @failure_code,
+                    failure_reason = @failure_reason,
+                    updated_at = @updated_at,
+                    finished_at = @finished_at
+                WHERE id = @id;";
 
-        cmd.Parameters.AddWithValue("@id", job.Id.ToString());
-        cmd.Parameters.AddWithValue("@effective_url", job.EffectiveUrl);
-        cmd.Parameters.AddWithValue("@target_path", job.TargetPath);
-        cmd.Parameters.AddWithValue("@downloaded_bytes", job.DownloadedBytes);
-        cmd.Parameters.AddWithValue("@state", (int)job.State);
-        cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@updated_at", DateTimeOffset.UtcNow.ToString("O"));
-        cmd.Parameters.AddWithValue("@finished_at", (object?)job.FinishedAt?.ToString("O") ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", job.Id.ToString());
+            cmd.Parameters.AddWithValue("@original_url", job.OriginalUrl);
+            cmd.Parameters.AddWithValue("@effective_url", job.EffectiveUrl);
+            cmd.Parameters.AddWithValue("@display_name", job.DisplayName);
+            cmd.Parameters.AddWithValue("@host", job.Host);
+            cmd.Parameters.AddWithValue("@target_path", job.TargetPath);
+            cmd.Parameters.AddWithValue("@temp_path", job.TempPath);
+            cmd.Parameters.AddWithValue("@expected_bytes", (object?)job.ExpectedBytes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@downloaded_bytes", job.DownloadedBytes);
+            cmd.Parameters.AddWithValue("@strong_etag", (object?)job.StrongETag ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@last_modified", (object?)job.LastModified ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@range_supported", job.RangeSupported ? 1 : 0);
+            cmd.Parameters.AddWithValue("@state", (int)job.State);
+            cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@updated_at", DateTimeOffset.UtcNow.ToString("O"));
+            cmd.Parameters.AddWithValue("@finished_at", (object?)job.FinishedAt?.ToString("O") ?? DBNull.Value);
 
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        if (job.Segments.Count > 0)
+        {
+            foreach (var segment in job.Segments)
+            {
+                using var segCmd = connection.CreateCommand();
+                segCmd.Transaction = transaction;
+                segCmd.CommandText = @"
+                    INSERT INTO segments (
+                        id, download_id, idx, start_byte, end_byte, next_byte, attempts, state, last_checkpoint_at
+                    ) VALUES (
+                        @id, @download_id, @idx, @start_byte, @end_byte, @next_byte, @attempts, @state, @last_checkpoint_at
+                    )
+                    ON CONFLICT(id) DO UPDATE SET
+                        next_byte = excluded.next_byte,
+                        attempts = excluded.attempts,
+                        state = excluded.state,
+                        last_checkpoint_at = excluded.last_checkpoint_at;";
+
+                segCmd.Parameters.AddWithValue("@id", segment.Id.ToString());
+                segCmd.Parameters.AddWithValue("@download_id", job.Id.ToString());
+                segCmd.Parameters.AddWithValue("@idx", segment.Index);
+                segCmd.Parameters.AddWithValue("@start_byte", segment.StartByte);
+                segCmd.Parameters.AddWithValue("@end_byte", segment.EndByte);
+                segCmd.Parameters.AddWithValue("@next_byte", segment.NextByte);
+                segCmd.Parameters.AddWithValue("@attempts", segment.Attempts);
+                segCmd.Parameters.AddWithValue("@state", (int)segment.State);
+                segCmd.Parameters.AddWithValue("@last_checkpoint_at", (object?)segment.LastCheckpointAt?.ToString("O") ?? DBNull.Value);
+
+                await segCmd.ExecuteNonQueryAsync(cancellationToken);
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task CheckpointSegmentAsync(DownloadSegment segment, CancellationToken cancellationToken = default)
@@ -190,6 +244,22 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             while (await reader.ReadAsync(cancellationToken))
             {
                 list.Add(MapDownloadJob(reader));
+            }
+        }
+
+        if (list.Count > 0)
+        {
+            using var segCmd = connection.CreateCommand();
+            segCmd.CommandText = "SELECT * FROM segments ORDER BY download_id, idx ASC;";
+            using var segReader = await segCmd.ExecuteReaderAsync(cancellationToken);
+            var lookup = list.ToDictionary(d => d.Id);
+            while (await segReader.ReadAsync(cancellationToken))
+            {
+                var segment = MapDownloadSegment(segReader);
+                if (lookup.TryGetValue(segment.DownloadId, out var job))
+                {
+                    job.Segments.Add(segment);
+                }
             }
         }
 

@@ -18,6 +18,8 @@ public sealed class DownloadService : IDownloadService
     private readonly ILogger<DownloadService>? _logger;
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeCancellations = new();
 
+    public int DefaultSegmentCount { get; set; } = 8;
+
     public event Action<Guid, long, double>? DownloadProgressUpdated;
     public event Action<DownloadJob>? JobStateChanged;
 
@@ -25,8 +27,10 @@ public sealed class DownloadService : IDownloadService
         IHttpProbe probe,
         IDownloadEngine engine,
         IDownloadRepository repository,
-        ILogger<DownloadService>? logger = null)
+        ILogger<DownloadService>? logger = null,
+        int defaultSegmentCount = 8)
     {
+        DefaultSegmentCount = Math.Clamp(defaultSegmentCount, 1, 32);
         _probe = probe;
         _engine = engine;
         _repository = repository;
@@ -77,7 +81,7 @@ public sealed class DownloadService : IDownloadService
 
         if (job.RangeSupported && job.ExpectedBytes is > 0)
         {
-            job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, 4);
+            job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, DefaultSegmentCount);
         }
 
         await _repository.AddDownloadAsync(job, cancellationToken);
@@ -93,6 +97,11 @@ public sealed class DownloadService : IDownloadService
             throw new KeyNotFoundException($"Download job with ID {downloadId} was not found.");
         }
 
+        if (job.State == JobState.Completed)
+        {
+            return;
+        }
+
         var cts = new CancellationTokenSource();
         if (!_activeCancellations.TryAdd(downloadId, cts))
         {
@@ -104,14 +113,24 @@ public sealed class DownloadService : IDownloadService
         _ = Task.Run(async () =>
         {
             long lastReportTimestamp = Stopwatch.GetTimestamp();
+            long lastCheckpointTimestamp = Stopwatch.GetTimestamp();
             long bytesInInterval = 0;
 
             try
             {
                 var progress = new Progress<long>(chunkBytes =>
                 {
-                    job.DownloadedBytes += chunkBytes;
                     Interlocked.Add(ref bytesInInterval, chunkBytes);
+
+                    // If segments exist, calculate downloaded bytes from segments for accuracy
+                    if (job.Segments.Count > 0)
+                    {
+                        job.DownloadedBytes = job.Segments.Sum(s => s.DownloadedBytes);
+                    }
+                    else
+                    {
+                        job.DownloadedBytes += chunkBytes;
+                    }
 
                     long now = Stopwatch.GetTimestamp();
                     double elapsedSec = (double)(now - lastReportTimestamp) / Stopwatch.Frequency;
@@ -122,6 +141,14 @@ public sealed class DownloadService : IDownloadService
                         lastReportTimestamp = now;
 
                         DownloadProgressUpdated?.Invoke(job.Id, job.DownloadedBytes, currentSpeed);
+                    }
+
+                    // Periodic database checkpointing every 2 seconds during active streaming
+                    double checkpointElapsedSec = (double)(now - lastCheckpointTimestamp) / Stopwatch.Frequency;
+                    if (checkpointElapsedSec >= 2.0)
+                    {
+                        lastCheckpointTimestamp = now;
+                        _ = _repository.UpdateDownloadAsync(job, CancellationToken.None);
                     }
                 });
 
@@ -135,6 +162,10 @@ public sealed class DownloadService : IDownloadService
             catch (OperationCanceledException)
             {
                 job.State = JobState.Paused;
+                if (job.Segments.Count > 0)
+                {
+                    job.DownloadedBytes = job.Segments.Sum(s => s.DownloadedBytes);
+                }
                 await _repository.UpdateDownloadAsync(job, CancellationToken.None);
                 JobStateChanged?.Invoke(job);
             }
@@ -143,6 +174,10 @@ public sealed class DownloadService : IDownloadService
                 job.State = JobState.Failed;
                 job.FailureCode = ex.GetType().Name;
                 job.FailureReason = ex.Message;
+                if (job.Segments.Count > 0)
+                {
+                    job.DownloadedBytes = job.Segments.Sum(s => s.DownloadedBytes);
+                }
                 await _repository.UpdateDownloadAsync(job, CancellationToken.None);
                 JobStateChanged?.Invoke(job);
             }
@@ -156,17 +191,19 @@ public sealed class DownloadService : IDownloadService
 
     public async Task PauseDownloadAsync(Guid downloadId, CancellationToken cancellationToken = default)
     {
-        if (_activeCancellations.TryRemove(downloadId, out var cts))
+        if (_activeCancellations.TryGetValue(downloadId, out var cts))
         {
             cts.Cancel();
         }
-
-        var job = await _repository.GetDownloadByIdAsync(downloadId, cancellationToken);
-        if (job != null)
+        else
         {
-            job.State = JobState.Paused;
-            await _repository.UpdateDownloadAsync(job, cancellationToken);
-            JobStateChanged?.Invoke(job);
+            var job = await _repository.GetDownloadByIdAsync(downloadId, cancellationToken);
+            if (job != null && job.State == JobState.Downloading)
+            {
+                job.State = JobState.Paused;
+                await _repository.UpdateDownloadAsync(job, cancellationToken);
+                JobStateChanged?.Invoke(job);
+            }
         }
     }
 
@@ -220,5 +257,52 @@ public sealed class DownloadService : IDownloadService
     public Task<IReadOnlyList<DownloadJob>> GetAllDownloadsAsync(CancellationToken cancellationToken = default)
     {
         return _repository.GetAllDownloadsAsync(cancellationToken);
+    }
+
+    public async Task RedownloadAsync(Guid downloadId, CancellationToken cancellationToken = default)
+    {
+        if (_activeCancellations.TryRemove(downloadId, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        var job = await _repository.GetDownloadByIdAsync(downloadId, cancellationToken);
+        if (job == null) return;
+
+        if (File.Exists(job.TargetPath))
+        {
+            try { File.Delete(job.TargetPath); } catch { /* Ignore file lock */ }
+        }
+        if (File.Exists(job.TempPath))
+        {
+            try { File.Delete(job.TempPath); } catch { /* Ignore file lock */ }
+        }
+
+        job.DownloadedBytes = 0;
+        job.State = JobState.Created;
+        job.FailureCode = null;
+        job.FailureReason = null;
+        job.FinishedAt = null;
+
+        if (job.RangeSupported && job.ExpectedBytes is > 0)
+        {
+            job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, DefaultSegmentCount);
+        }
+        else
+        {
+            job.Segments.Clear();
+        }
+
+        await _repository.UpdateDownloadAsync(job, cancellationToken);
+        JobStateChanged?.Invoke(job);
+
+        await StartDownloadAsync(downloadId, cancellationToken);
+    }
+
+    public async Task UpdateJobAsync(DownloadJob job, CancellationToken cancellationToken = default)
+    {
+        await _repository.UpdateDownloadAsync(job, cancellationToken);
+        JobStateChanged?.Invoke(job);
     }
 }
