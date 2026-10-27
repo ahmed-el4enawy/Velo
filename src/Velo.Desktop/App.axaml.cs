@@ -29,39 +29,115 @@ public partial class App : Avalonia.Application
                 DataContext = mainVm,
             };
 
-            // Start background IPC server for Chrome extension handoffs
+            // Start background bidirectional IPC server for Chrome extension handoffs
             IpcServer.StartListening(message =>
             {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                if (message == "__ACTIVATE__")
                 {
-                    if (message == "__ACTIVATE__")
+                    Avalonia.Threading.Dispatcher.UIThread.Post(ShowMainWindow);
+                    return "ACK:ACTIVATED";
+                }
+
+                if (Uri.TryCreate(message, UriKind.Absolute, out var validatedUri) &&
+                    (validatedUri.Scheme == Uri.UriSchemeHttp || validatedUri.Scheme == Uri.UriSchemeHttps))
+                {
+                    string safeUrl = validatedUri.ToString();
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        desktop.MainWindow?.Activate();
-                    }
-                    else if (message.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                             message.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                    {
-                        mainVm.OpenAddDownloadDialog(message);
-                        desktop.MainWindow?.Activate();
-                    }
-                });
+                        mainVm.OpenAddDownloadDialog(safeUrl);
+                    });
+                    return "ACK:ACCEPTED";
+                }
+
+                return "ACK:REJECTED_INVALID_SCHEME";
             });
 
-            // Check command line arguments for initial download URL
+            bool startInBackground = false;
+            string? initialUrl = null;
+
             if (desktop.Args != null && desktop.Args.Length > 0)
             {
                 for (int i = 0; i < desktop.Args.Length; i++)
                 {
-                    if (desktop.Args[i] == "--url" && i + 1 < desktop.Args.Length)
+                    if (desktop.Args[i] == "--background")
                     {
-                        string initialUrl = desktop.Args[i + 1];
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
-                        break;
+                        startInBackground = true;
+                    }
+                    else if (desktop.Args[i] == "--url" && i + 1 < desktop.Args.Length)
+                    {
+                        initialUrl = desktop.Args[i + 1];
                     }
                 }
             }
+
+            if (startInBackground)
+            {
+                // Start hidden in tray, only show popup dialog for the URL
+                desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                desktop.MainWindow.Show();
+                desktop.MainWindow.Hide();
+
+                if (!string.IsNullOrWhiteSpace(initialUrl))
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(initialUrl))
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
+                }
+            }
+
+            desktop.Exit += (_, _) =>
+            {
+                IpcServer.Stop();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    public static void ShowMainWindow()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            if (!desktop.MainWindow.IsVisible)
+            {
+                desktop.MainWindow.Show();
+            }
+            if (desktop.MainWindow.WindowState == Avalonia.Controls.WindowState.Minimized)
+            {
+                desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
+            }
+            desktop.MainWindow.Activate();
+        }
+    }
+
+    private void OnTrayIconClicked(object? sender, EventArgs e)
+    {
+        ShowMainWindow();
+    }
+
+    private void OnOpenVeloClicked(object? sender, EventArgs e)
+    {
+        ShowMainWindow();
+    }
+
+    private void OnExitVeloClicked(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            if (desktop.MainWindow is MainWindow win)
+            {
+                win.ForceExit();
+            }
+            else
+            {
+                IpcServer.Stop();
+                desktop.Shutdown();
+            }
+        }
     }
 }

@@ -72,36 +72,60 @@ internal static class Program
                 string action = root.TryGetProperty("action", out var act) ? act.GetString() ?? "" : "";
                 string url = root.TryGetProperty("url", out var u) ? u.GetString() ?? "" : "";
 
-                if (action == "enqueue_download" && !string.IsNullOrWhiteSpace(url))
+                if (action == "enqueue_download")
                 {
-                    if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+                    if (string.IsNullOrWhiteSpace(url))
+                    {
+                        responseObj = new { status = "error", accepted = false, message = "URL parameter is missing or empty" };
+                    }
+                    else if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
                         (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
                     {
-                        bool handedOff = await TrySendViaIpcAsync(url);
-                        if (!handedOff)
+                        string safeUrl = uri.ToString();
+                        var (handedOff, reply) = await TrySendViaIpcAsync(safeUrl);
+                        if (handedOff && reply.StartsWith("ACK:ACCEPTED"))
                         {
-                            LaunchVeloDesktop(url);
+                            responseObj = new { status = "accepted", accepted = true, url = safeUrl };
                         }
-                        responseObj = new { status = "enqueued", url = url };
+                        else
+                        {
+                            bool launched = LaunchVeloDesktop(safeUrl);
+                            if (launched)
+                            {
+                                responseObj = new { status = "accepted", accepted = true, url = safeUrl, activated = true };
+                            }
+                            else
+                            {
+                                responseObj = new { status = "error", accepted = false, message = "Velo desktop host application is unavailable" };
+                            }
+                        }
                     }
                     else
                     {
-                        responseObj = new { status = "error", message = "Invalid HTTP/HTTPS scheme" };
+                        responseObj = new { status = "error", accepted = false, message = "Invalid HTTP/HTTPS URL scheme" };
                     }
                 }
                 else if (action == "open_app")
                 {
-                    bool handedOff = await TrySendViaIpcAsync("__ACTIVATE__");
+                    var (handedOff, _) = await TrySendViaIpcAsync("__ACTIVATE__");
                     if (!handedOff)
                     {
                         LaunchVeloDesktop(null);
                     }
-                    responseObj = new { status = "opened" };
+                    responseObj = new { status = "opened", accepted = true };
+                }
+                else if (action == "ping")
+                {
+                    responseObj = new { status = "pong", version = "2.0" };
+                }
+                else
+                {
+                    responseObj = new { status = "error", accepted = false, message = $"Unknown action: {action}" };
                 }
             }
             catch (Exception ex)
             {
-                responseObj = new { status = "error", message = ex.Message };
+                responseObj = new { status = "error", accepted = false, message = ex.Message };
             }
 
             // Write response
@@ -113,23 +137,26 @@ internal static class Program
         }
     }
 
-    private static async Task<bool> TrySendViaIpcAsync(string message)
+    private static async Task<(bool Success, string Reply)> TrySendViaIpcAsync(string message)
     {
         try
         {
-            using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-            await client.ConnectAsync(600); // 600ms timeout
+            using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut);
+            await client.ConnectAsync(800); // 800ms timeout
             using var writer = new StreamWriter(client) { AutoFlush = true };
+            using var reader = new StreamReader(client);
+
             await writer.WriteLineAsync(message);
-            return true;
+            string reply = await reader.ReadLineAsync() ?? "";
+            return (true, reply);
         }
         catch
         {
-            return false;
+            return (false, "");
         }
     }
 
-    private static void LaunchVeloDesktop(string? url)
+    private static bool LaunchVeloDesktop(string? url)
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string veloExe = Path.Combine(baseDir, "Velo.exe");
@@ -159,12 +186,25 @@ internal static class Program
 
         if (File.Exists(veloExe))
         {
-            string args = !string.IsNullOrWhiteSpace(url) ? $"--url \"{url}\"" : "";
-            Process.Start(new ProcessStartInfo(veloExe, args)
+            try
             {
-                UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(veloExe)
-            });
+                string args = !string.IsNullOrWhiteSpace(url)
+                    ? $"--background --url \"{url}\""
+                    : "--background";
+
+                var proc = Process.Start(new ProcessStartInfo(veloExe, args)
+                {
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetDirectoryName(veloExe)
+                });
+                return proc != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
+
+        return false;
     }
 }
