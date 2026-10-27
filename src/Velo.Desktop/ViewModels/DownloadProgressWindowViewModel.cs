@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Velo.Domain;
+using Velo.DownloadEngine;
 
 namespace Velo.Desktop.ViewModels;
 
@@ -54,6 +57,7 @@ public partial class DownloadProgressWindowViewModel : ViewModelBase
 
     public string WindowTitle => $"{(int)Item.ProgressPercentage}% {TruncateWithDots(Item.DisplayName, 35)}";
     public string EffectiveUrl => !string.IsNullOrEmpty(Item.EffectiveUrl) ? Item.EffectiveUrl : Item.OriginalUrl;
+    public string SaveToPath => !string.IsNullOrEmpty(Item.Job.TargetPath) ? System.IO.Path.GetDirectoryName(Item.Job.TargetPath) ?? Item.Job.TargetPath : "Default folder";
 
     public string StatusText => Item.Job.State switch
     {
@@ -93,6 +97,38 @@ public partial class DownloadProgressWindowViewModel : ViewModelBase
     {
         Item = item;
         Item.PropertyChanged += OnItemPropertyChanged;
+
+        // Check global throttler default
+        var throttler = App.Services?.GetService<ISpeedThrottler>();
+        if (throttler?.SpeedLimitBytesPerSecond != null && throttler.SpeedLimitBytesPerSecond > 0)
+        {
+            _useSpeedLimiter = true;
+            _speedLimitKBytes = (int)(throttler.SpeedLimitBytesPerSecond.Value / 1024);
+        }
+    }
+
+    partial void OnUseSpeedLimiterChanged(bool value)
+    {
+        ApplySpeedLimiter();
+    }
+
+    partial void OnSpeedLimitKBytesChanged(int value)
+    {
+        if (UseSpeedLimiter)
+        {
+            ApplySpeedLimiter();
+        }
+    }
+
+    private void ApplySpeedLimiter()
+    {
+        var throttler = App.Services?.GetService<ISpeedThrottler>();
+        if (throttler != null)
+        {
+            throttler.SpeedLimitBytesPerSecond = UseSpeedLimiter && SpeedLimitKBytes > 0
+                ? (long)SpeedLimitKBytes * 1024
+                : null;
+        }
     }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -104,6 +140,50 @@ public partial class DownloadProgressWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(TransferRateText));
         OnPropertyChanged(nameof(TimeLeftText));
         OnPropertyChanged(nameof(PauseButtonText));
+
+        if (e.PropertyName == nameof(Item.ProgressPercentage) && Item.Job.State == JobState.Completed)
+        {
+            HandleCompletionTriggers();
+        }
+    }
+
+    private void HandleCompletionTriggers()
+    {
+        if (ShowDownloadCompleteDialog) return;
+
+        if (ExitWhenDone)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    if (desktop.MainWindow is Views.MainWindow win)
+                    {
+                        win.ForceExit();
+                    }
+                    else
+                    {
+                        desktop.Shutdown();
+                    }
+                }
+            });
+            return;
+        }
+
+        if (TurnOffComputer)
+        {
+            try
+            {
+                string cmd = SelectedShutdownAction switch
+                {
+                    "Sleep" => "rundll32.exe powrprof.dll,SetSuspendState 0,1,0",
+                    "Hibernate" => "shutdown /h",
+                    _ => ForceTerminate ? "shutdown /s /f /t 10" : "shutdown /s /t 10"
+                };
+                Process.Start("cmd.exe", $"/c {cmd}");
+            }
+            catch { }
+        }
     }
 
     [RelayCommand]
