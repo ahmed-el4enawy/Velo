@@ -365,7 +365,7 @@
                                             <MenuItem Header="Open Folder" Command="{Binding OpenFolderCommand}" />
                                             <Separator />
                                             <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
-                                            <MenuItem Header="Details..." Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenDownloadProgressDialogCommand}" CommandParameter="{Binding}" />
+                                            <MenuItem Header="Details..." Command="{Binding OpenDetailsCommand}" />
                                         </ContextMenu>
                                     </Grid.ContextMenu>
 

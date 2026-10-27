@@ -162,6 +162,14 @@ public partial class DownloadItemViewModel : ViewModelBase
         }
     }
 
+    public static event Action<DownloadItemViewModel>? DetailsRequested;
+
+    [RelayCommand]
+    public void OpenDetails()
+    {
+        DetailsRequested?.Invoke(this);
+    }
+
     [RelayCommand]
     private void ToggleDetails()
     {

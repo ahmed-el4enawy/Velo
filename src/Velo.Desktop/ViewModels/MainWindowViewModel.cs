@@ -50,6 +50,10 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _downloadService.DownloadProgressUpdated += OnDownloadProgressUpdated;
             _downloadService.JobStateChanged += OnJobStateChanged;
+            DownloadItemViewModel.DetailsRequested += item =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => OpenDownloadProgressDialog(item));
+            };
             _ = LoadInitialDownloadsAsync();
         }
     }
