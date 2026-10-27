@@ -4,7 +4,12 @@
     <RootNamespace>Velo.Desktop</RootNamespace>
     <AssemblyName>Velo</AssemblyName>
     <ApplicationTitle>Velo</ApplicationTitle>
+    <ApplicationIcon>Assets\Velo.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Velo.Application\Velo.Application.csproj" />
