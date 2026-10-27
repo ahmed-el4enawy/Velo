@@ -39,6 +39,7 @@ public static class Bootstrapper
         };
 
         services.AddSingleton(httpClient);
+        services.AddSingleton<ISpeedThrottler, TokenBucketThrottler>();
         services.AddSingleton<IHttpProbe, HttpProbe>();
         services.AddSingleton<IPartialFileManager, PositionalFileManager>();
         services.AddSingleton<IDownloadEngine, MultiSegmentEngine>();

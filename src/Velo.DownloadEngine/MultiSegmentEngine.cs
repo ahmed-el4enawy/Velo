@@ -12,14 +12,17 @@ public sealed class MultiSegmentEngine : IDownloadEngine
 {
     private readonly HttpClient _httpClient;
     private readonly IPartialFileManager _fileManager;
+    private readonly ISpeedThrottler? _throttler;
     private readonly ILogger<MultiSegmentEngine>? _logger;
 
     public MultiSegmentEngine(
         HttpClient? httpClient = null,
         IPartialFileManager? fileManager = null,
+        ISpeedThrottler? throttler = null,
         ILogger<MultiSegmentEngine>? logger = null)
     {
         _logger = logger;
+        _throttler = throttler;
         _fileManager = fileManager ?? new PositionalFileManager();
         _httpClient = httpClient ?? new HttpClient(new SocketsHttpHandler
         {
@@ -53,7 +56,7 @@ public sealed class MultiSegmentEngine : IDownloadEngine
                     job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, 4);
                 }
 
-                var worker = new SegmentWorker(_httpClient, _fileManager);
+                var worker = new SegmentWorker(_httpClient, _fileManager, _throttler);
                 var workerTasks = job.Segments.Select(segment =>
                     worker.DownloadSegmentAsync(job, segment, byteProgress, cancellationToken));
 

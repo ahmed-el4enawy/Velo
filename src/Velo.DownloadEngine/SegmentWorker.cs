@@ -13,14 +13,20 @@ public sealed class SegmentWorker
 {
     private readonly HttpClient _httpClient;
     private readonly IPartialFileManager _fileManager;
+    private readonly ISpeedThrottler? _throttler;
     private readonly ILogger<SegmentWorker>? _logger;
     private const int BufferSize = 64 * 1024; // 64 KB streaming buffer
     private const int MaxRetries = 5;
 
-    public SegmentWorker(HttpClient httpClient, IPartialFileManager fileManager, ILogger<SegmentWorker>? logger = null)
+    public SegmentWorker(
+        HttpClient httpClient,
+        IPartialFileManager fileManager,
+        ISpeedThrottler? throttler = null,
+        ILogger<SegmentWorker>? logger = null)
     {
         _httpClient = httpClient;
         _fileManager = fileManager;
+        _throttler = throttler;
         _logger = logger;
     }
 
@@ -88,6 +94,11 @@ public sealed class SegmentWorker
 
                     // Positional asynchronous write to disk
                     await _fileManager.WriteChunkAsync(job.TempPath, segment.NextByte, buffer.AsMemory(0, bytesRead), cancellationToken);
+
+                    if (_throttler != null)
+                    {
+                        await _throttler.ThrottleAsync(bytesRead, cancellationToken);
+                    }
 
                     segment.NextByte += bytesRead;
                     segment.LastCheckpointAt = DateTimeOffset.UtcNow;
