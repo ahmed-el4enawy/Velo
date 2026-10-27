@@ -7,8 +7,8 @@
         x:Class="Velo.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding AppTitle}"
-        Width="1100" Height="700"
-        MinWidth="850" MinHeight="550"
+        Width="1120" Height="720"
+        MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="#12141A">
 
@@ -26,6 +26,16 @@
                         <TextBlock Text="Multi-Stream Engine" FontSize="11" Foreground="#94A3B8" />
                     </StackPanel>
                 </StackPanel>
+
+                <!-- Settings Button Pinned to Bottom -->
+                <Button DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                        Command="{Binding OpenSettingsDialogCommand}"
+                        Background="#242938" Foreground="#F8FAFC" Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="⚙️" />
+                        <TextBlock Text="Settings" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
 
                 <!-- Navigation Rail Filters -->
                 <ScrollViewer>
@@ -114,7 +124,7 @@
 
         <!-- Main Content Area -->
         <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
-            <!-- Top Action Toolbar -->
+            <!-- Top Action Toolbar (PRD Section 4.1) -->
             <Border Grid.Row="0" Background="#14171F" BorderBrush="#252A36" BorderThickness="0,0,0,1" Padding="16,12">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- Actions -->
@@ -123,6 +133,12 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="➕" VerticalAlignment="Center" />
                                 <TextBlock Text="Add Download" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding PasteAndAddDownloadCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="📋" VerticalAlignment="Center" />
+                                <TextBlock Text="Paste URL" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding ResumeAllCommand}">
@@ -144,40 +160,99 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:DownloadItemViewModel">
                             <Border Background="#181B24" BorderBrush="#262D3D" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
-                                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
-                                    <!-- Title & Host -->
-                                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="15" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Host}" FontSize="12" Foreground="#64748B" />
-                                    </StackPanel>
-
-                                    <!-- Status Badge & Speed -->
-                                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
-                                        <Border CornerRadius="4" Padding="8,4" Background="#1E293B">
-                                            <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="Bold" FontSize="11" />
-                                        </Border>
-                                        <TextBlock Text="{Binding SpeedText}" Foreground="#10B981" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
-                                    </StackPanel>
-
-                                    <!-- Progress Bar -->
-                                    <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="6" CornerRadius="3" Margin="0,12"
-                                                 Value="{Binding ProgressPercentage}" Maximum="100" Background="#232938" Foreground="#6366F1" />
-
-                                    <!-- Footer Stats & Actions -->
-                                    <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto">
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding SizeInfo}" FontSize="12" Foreground="#94A3B8" />
-                                            <TextBlock Text="{Binding EtaText}" FontSize="12" Foreground="#64748B" />
+                                <StackPanel Spacing="10">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                        <!-- Title & Host -->
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="15" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Host}" FontSize="12" Foreground="#64748B" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                            <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding ResumeCommand}" Content="▶ Resume" />
-                                            <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding PauseCommand}" Content="⏸ Pause" />
-                                            <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding OpenFolderCommand}" Content="📂 Folder" />
-                                            <Button Padding="10,5" CornerRadius="5" Background="#3B2329" Foreground="#F87171" FontSize="12" Command="{Binding CancelCommand}" Content="✕ Cancel" />
+                                        <!-- Status Badge & Speed -->
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
+                                            <Border CornerRadius="4" Padding="8,4" Background="#1E293B">
+                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="Bold" FontSize="11" />
+                                            </Border>
+                                            <TextBlock Text="{Binding SpeedText}" Foreground="#10B981" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                                         </StackPanel>
+
+                                        <!-- Progress Bar -->
+                                        <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="6" CornerRadius="3" Margin="0,12"
+                                                     Value="{Binding ProgressPercentage}" Maximum="100" Background="#232938" Foreground="#6366F1" />
+
+                                        <!-- Footer Stats & Actions -->
+                                        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto">
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding SizeInfo}" FontSize="12" Foreground="#94A3B8" />
+                                                <TextBlock Text="{Binding EtaText}" FontSize="12" Foreground="#64748B" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding ToggleDetailsCommand}" Content="🔍 Details" />
+                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding ResumeCommand}" Content="▶ Resume" />
+                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding PauseCommand}" Content="⏸ Pause" />
+                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding OpenFolderCommand}" Content="📂 Folder" />
+                                                <Button Padding="10,5" CornerRadius="5" Background="#3B2329" Foreground="#F87171" FontSize="12" Command="{Binding CancelCommand}" Content="✕ Cancel" />
+                                            </StackPanel>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
+
+                                    <!-- Details Inspector Panel (PRD Section 4.1) -->
+                                    <Border IsVisible="{Binding IsDetailsExpanded}" Background="#13161F" BorderBrush="#262D3D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
+                                        <StackPanel Spacing="10">
+                                            <TextBlock Text="DOWNLOAD DIAGNOSTICS &amp; HTTP INSPECTOR" FontSize="11" FontWeight="Bold" Foreground="#818CF8" />
+
+                                            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Effective URL:" FontSize="11" Foreground="#94A3B8" />
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding EffectiveUrl}" FontSize="11" Foreground="#F8FAFC" TextWrapping="Wrap" />
+
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Target Path:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TargetPath}" FontSize="11" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,4,0,0" />
+
+                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Range Support:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RangeSupportText}" FontSize="11" Foreground="#10B981" Margin="0,4,0,0" />
+
+                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="ETag / Modified:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding EtagText}" FontSize="11" Foreground="#F8FAFC" Margin="0,4,0,0" />
+
+                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Category / Priority:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                                    <TextBlock Text="{Binding CategoryText}" FontSize="11" Foreground="#F8FAFC" />
+                                                    <TextBlock Text="•" FontSize="11" Foreground="#64748B" />
+                                                    <TextBlock Text="{Binding PriorityText}" FontSize="11" Foreground="#F8FAFC" />
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Timestamps:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                                    <TextBlock Text="Created: " FontSize="11" Foreground="#64748B" />
+                                                    <TextBlock Text="{Binding CreatedAtText}" FontSize="11" Foreground="#F8FAFC" />
+                                                    <TextBlock Text="• Finished: " FontSize="11" Foreground="#64748B" />
+                                                    <TextBlock Text="{Binding FinishedAtText}" FontSize="11" Foreground="#F8FAFC" />
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Diagnostic Info:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
+                                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding FailureDetailsText}" FontSize="11" Foreground="#EF4444" Margin="0,4,0,0" />
+                                            </Grid>
+
+                                            <!-- Multi-Stream Segments Grid -->
+                                            <StackPanel Spacing="6" Margin="0,6,0,0" IsVisible="{Binding SegmentsCount}">
+                                                <TextBlock Text="CONCURRENT STREAM CHUNKS" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                                <ItemsControl ItemsSource="{Binding Segments}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:SegmentDisplayModel">
+                                                            <Grid ColumnDefinitions="30,160,*,70" Margin="0,2">
+                                                                <TextBlock Grid.Column="0" Text="{Binding Index, StringFormat='#{0}'}" FontSize="11" Foreground="#818CF8" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding RangeText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                                <ProgressBar Grid.Column="2" Height="4" Value="{Binding ProgressPercentage}" Maximum="100" Background="#1E2330" Foreground="#6366F1" Margin="8,0" VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="3" Text="{Binding StateText}" FontSize="10" Foreground="#38BDF8" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -189,8 +264,8 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Grid.Column="0" Text="Ready • Windows 10 x64 Engine • Offline-first (Zero Telemetry)" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                        <TextBlock Text="Active Streams: 0/24" FontSize="12" Foreground="#94A3B8" />
-                        <TextBlock Text="Total Speed: 0.0 MB/s" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" />
+                        <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Active Streams: {0}/24'}" FontSize="12" Foreground="#94A3B8" />
+                        <TextBlock Text="{Binding TotalSpeedText, StringFormat='Total Speed: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" />
                     </StackPanel>
                 </Grid>
             </Border>

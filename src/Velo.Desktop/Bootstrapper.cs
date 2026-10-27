@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Velo.Application;
+using Velo.Application.Queue;
+using Velo.Application.Services;
 using Velo.Desktop.ViewModels;
 using Velo.Domain;
 using Velo.DownloadEngine;
@@ -46,11 +48,15 @@ public static class Bootstrapper
 
         // Repositories & Application Services
         services.AddSingleton<IDownloadRepository>(_ => new SqliteDownloadRepository(connectionString));
+        services.AddSingleton<ISettingsRepository>(_ => new SqliteSettingsRepository(connectionString));
         services.AddSingleton<IDownloadService, DownloadService>();
+        services.AddSingleton<IQueueManager, QueueManager>();
+        services.AddSingleton<IClipboardMonitor, ClipboardMonitorService>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<AddDownloadWindowViewModel>();
+        services.AddTransient<SettingsWindowViewModel>();
 
         return services.BuildServiceProvider();
     }
