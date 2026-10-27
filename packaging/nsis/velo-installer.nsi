@@ -47,6 +47,15 @@ Section "Velo Core Application" SecCore
     ; Write Uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
 
+    ; Write Native Messaging Host Manifest
+    FileOpen $0 "$INSTDIR\com.velo.downloader.json" w
+    FileWrite $0 '{"name":"com.velo.downloader","description":"Velo High-Speed Download Acceleration Bridge","path":"$INSTDIR\\Velo.NativeMessaging.exe","type":"stdio","allowed_origins":["chrome-extension://akobbbjojgceldlhaeiidogehdomjinn/"]}'
+    FileClose $0
+
+    ; Register Native Messaging Host for Chrome and Edge
+    WriteRegStr HKCU "Software\Google\Chrome\NativeMessagingHosts\com.velo.downloader" "" "$INSTDIR\com.velo.downloader.json"
+    WriteRegStr HKCU "Software\Microsoft\Edge\NativeMessagingHosts\com.velo.downloader" "" "$INSTDIR\com.velo.downloader.json"
+
     ; Registry entries for Add/Remove Programs (HKCU)
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Velo" "DisplayName" "Velo Download Accelerator"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Velo" "UninstallString" "$INSTDIR\Uninstall.exe"
@@ -58,6 +67,10 @@ Section "Uninstall"
     Delete "$SMPROGRAMS\Velo\Velo.lnk"
     Delete "$SMPROGRAMS\Velo\Uninstall Velo.lnk"
     RMDir "$SMPROGRAMS\Velo"
+
+    ; Unregister Native Messaging Host
+    DeleteRegKey HKCU "Software\Google\Chrome\NativeMessagingHosts\com.velo.downloader"
+    DeleteRegKey HKCU "Software\Microsoft\Edge\NativeMessagingHosts\com.velo.downloader"
 
     RMDir /r "$INSTDIR"
     DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Velo"

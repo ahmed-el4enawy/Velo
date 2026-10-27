@@ -17,16 +17,18 @@ Write-Host "==========================================" -ForegroundColor Cyan
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 if (!(Test-Path $artifactsDir)) { New-Item $artifactsDir -ItemType Directory -Force | Out-Null }
 
-Write-Host "`n1. Publishing Windows 10 x64 Release Binary..." -ForegroundColor Yellow
+Write-Host "`n1. Publishing Windows 10 x64 Self-Contained Release Binary..." -ForegroundColor Yellow
 dotnet publish (Join-Path $rootDir "src\Velo.Desktop\Velo.Desktop.csproj") `
     -c Release `
-    --no-restore `
+    -r win-x64 `
+    --self-contained true `
     -o $publishDir
 
 Write-Host "`n1b. Publishing Native Messaging Host..." -ForegroundColor Yellow
 dotnet publish (Join-Path $rootDir "src\Velo.NativeMessaging\Velo.NativeMessaging.csproj") `
     -c Release `
-    --no-restore `
+    -r win-x64 `
+    --self-contained true `
     -o $publishDir
 
 $sourceIco = Join-Path $rootDir "src\Velo.Desktop\Assets\Velo.ico"
