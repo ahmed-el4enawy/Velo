@@ -134,7 +134,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenAddDownloadDialog(string? initialUrl = null)
+    public void OpenAddDownloadDialog(string? initialUrl = null)
     {
         if (_serviceProvider == null) return;
 
