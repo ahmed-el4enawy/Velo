@@ -50,21 +50,23 @@ public sealed class TokenBucketThrottler : ISpeedThrottler
             double elapsedSeconds = (double)(currentTimestamp - _lastRefillTimestamp) / Stopwatch.Frequency;
             _lastRefillTimestamp = currentTimestamp;
 
-            double maxCapacity = _speedLimitBytesPerSecond.Value;
-            _availableTokens = Math.Min(maxCapacity, _availableTokens + (elapsedSeconds * _speedLimitBytesPerSecond.Value));
+            double rate = _speedLimitBytesPerSecond.Value;
+            double maxCapacity = rate; // Burst buffer equivalent to 1 second
+            _availableTokens = Math.Min(maxCapacity, _availableTokens + (elapsedSeconds * rate));
 
-            if (_availableTokens >= bytesRequested)
+            // Deduct tokens directly to track debt across concurrent threads
+            _availableTokens -= bytesRequested;
+
+            if (_availableTokens < 0)
             {
-                _availableTokens -= bytesRequested;
-                return;
+                double secondsNeeded = -_availableTokens / rate;
+                // Cap single sleep to 5s, and clamp debt to max 5s so workers don't freeze permanently
+                delay = TimeSpan.FromSeconds(Math.Min(secondsNeeded, 5.0));
+                if (_availableTokens < -rate * 5.0)
+                {
+                    _availableTokens = -rate * 5.0;
+                }
             }
-
-            // Calculate wait time needed to replenish the deficit
-            double deficit = bytesRequested - _availableTokens;
-            double secondsNeeded = deficit / _speedLimitBytesPerSecond.Value;
-            _availableTokens = 0; // Bucket drained
-
-            delay = TimeSpan.FromSeconds(Math.Min(secondsNeeded, 5.0)); // Cap single sleep to 5s
         }
 
         if (delay > TimeSpan.Zero)
