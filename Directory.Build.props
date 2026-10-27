@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    
+    <!-- Branding & Metadata -->
+    <Authors>Ahmed Elshenawy</Authors>
+    <Company>Velo</Company>
+    <Product>Velo Next-Gen Download Accelerator</Product>
+    <Copyright>Copyright (c) 2026 Ahmed Elshenawy</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ahmed-el4enawy/Velo</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>1.0.0-preview.1</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+
+    <!-- Platform Target Policy (Windows 10 x64 Only) -->
+    <TargetPlatformIdentifier Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == ''">windows</TargetPlatformIdentifier>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+</Project>

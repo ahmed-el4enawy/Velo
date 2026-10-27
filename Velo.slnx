@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Velo.Application/Velo.Application.csproj" />
+    <Project Path="src/Velo.Desktop/Velo.Desktop.csproj" />
+    <Project Path="src/Velo.Domain/Velo.Domain.csproj" />
+    <Project Path="src/Velo.DownloadEngine/Velo.DownloadEngine.csproj" />
+    <Project Path="src/Velo.Infrastructure/Velo.Infrastructure.csproj" />
+    <Project Path="src/Velo.MediaIntegration/Velo.MediaIntegration.csproj" />
+    <Project Path="src/Velo.NativeMessaging/Velo.NativeMessaging.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Velo.EndToEndTests/Velo.EndToEndTests.csproj" />
+    <Project Path="tests/Velo.IntegrationTests/Velo.IntegrationTests.csproj" />
+    <Project Path="tests/Velo.UnitTests/Velo.UnitTests.csproj" />
+  </Folder>
+</Solution>

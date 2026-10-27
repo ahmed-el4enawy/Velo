@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Velo Download Companion",
+  "version": "1.0.0",
+  "description": "Companion browser extension to send downloads to Velo Download Accelerator.",
+  "permissions": [
+    "contextMenus",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Download with Velo"
+  }
+}

@@ -1,46 +1,70 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C / C++ / C# build artifacts
+## .NET / C# Build Outputs
 [Bb]in/
 [Oo]bj/
-*.exe
-*.dll
-*.so
-*.dylib
-*.pdb
+[Aa]rms/
+[Aa]rm64/
+artifacts/
+TestResults/
+*.DotSettings.user
 
-# Node / JS
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-dist/
-build/
-.next/
+## Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
 
-# Environments
-.env
-.env.local
-.venv
-env/
-venv/
-ENV/
-
-# IDE & OS
-.vscode/
+## JetBrains Rider & Resharper
 .idea/
-*.swp
-*.swo
+*.sln.iml
+_ReSharper*/
+
+## Visual Studio Code
+.vscode/
+
+## Avalonia
+*.xaml.g.cs
+*.g.i.cs
+
+## SQLite & Local State
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+velo.db*
+
+## Velo Download Partial & Temp Files
+*.velo.part
+*.part
+*.tmp
+downloads/
+temp/
+staging/
+
+## Logs & Diagnostics
+logs/
+*.log
+
+## Packaging & Installer Binaries
+packaging/nsis/output/
+*.setup.exe
+*.portable.zip
+
+## OS Specific
 Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Velo Runtime / Downloads / Partials
-*.part
-*.velo-temp
-downloads/
-temp/
-logs/
+## Browser Extensions Build Outputs
+extensions/**/dist/
+extensions/**/node_modules/
+
+## Python & Environments
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+

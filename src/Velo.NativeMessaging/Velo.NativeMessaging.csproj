@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Velo.NativeMessaging</RootNamespace>
+    <AssemblyName>Velo.NativeMessaging</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Velo.Domain\Velo.Domain.csproj" />
+  </ItemGroup>
+</Project>

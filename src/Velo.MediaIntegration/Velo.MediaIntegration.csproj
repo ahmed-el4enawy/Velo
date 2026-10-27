@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Velo.MediaIntegration</RootNamespace>
+    <AssemblyName>Velo.MediaIntegration</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Velo.Domain\Velo.Domain.csproj" />
+  </ItemGroup>
+</Project>

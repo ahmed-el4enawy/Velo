@@ -1,0 +1,154 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Velo.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        x:Class="Velo.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding AppTitle}"
+        Width="1050" Height="680"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#12141A">
+
+    <Grid ColumnDefinitions="240,*">
+        <!-- Left Sidebar Navigation -->
+        <Border Grid.Column="0" Background="#181B22" BorderBrush="#252A36" BorderThickness="0,0,1,0">
+            <DockPanel Margin="16">
+                <!-- Branding Header -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="0,0,0,24">
+                    <Border Width="36" Height="36" CornerRadius="8" Background="#6366F1">
+                        <TextBlock Text="⚡" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="VELO" FontWeight="Bold" FontSize="18" Foreground="#F8FAFC" />
+                        <TextBlock Text="Accelerated Engine" FontSize="11" Foreground="#94A3B8" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Navigation Rail -->
+                <ScrollViewer>
+                    <StackPanel Spacing="6">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="#242938" Foreground="#F8FAFC">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="📥" />
+                                <TextBlock Text="All Downloads" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="⚡" />
+                                <TextBlock Text="Downloading" />
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="⏳" />
+                                <TextBlock Text="Queued" />
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="⏸️" />
+                                <TextBlock Text="Paused" />
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="✅" />
+                                <TextBlock Text="Completed" />
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="❌" />
+                                <TextBlock Text="Failed" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator Background="#252A36" Margin="0,12" />
+
+                        <TextBlock Text="CATEGORIES" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="8,4" />
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <TextBlock Text="📦 Compressed" />
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <TextBlock Text="🎬 Video" />
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <TextBlock Text="🎵 Music" />
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <TextBlock Text="📄 Documents" />
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <TextBlock Text="💻 Programs" />
+                        </Button>
+
+                        <Separator Background="#252A36" Margin="0,12" />
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="⚙️" />
+                                <TextBlock Text="Settings" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+            <!-- Top Action Toolbar -->
+            <Border Grid.Row="0" Background="#14171F" BorderBrush="#252A36" BorderThickness="0,0,0,1" Padding="16,12">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <!-- Actions -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                        <Button Background="#4F46E5" Foreground="White" Padding="14,8" CornerRadius="6" Command="{Binding OpenAddDownloadDialogCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="➕" VerticalAlignment="Center" />
+                                <TextBlock Text="Add Download" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding ResumeAllCommand}">
+                            <TextBlock Text="▶ Resume All" />
+                        </Button>
+                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding PauseAllCommand}">
+                            <TextBlock Text="⏸ Pause All" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Search Box -->
+                    <TextBox Grid.Column="2" Width="260" Watermark="Search downloads..." Text="{Binding SearchQuery}" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
+                </Grid>
+            </Border>
+
+            <!-- Download List / Empty State -->
+            <Border Grid.Row="1" Padding="24">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                    <Border Width="64" Height="64" CornerRadius="32" Background="#1E2330" HorizontalAlignment="Center">
+                        <TextBlock Text="🚀" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="No active downloads" FontWeight="SemiBold" FontSize="18" Foreground="#F8FAFC" HorizontalAlignment="Center" />
+                    <TextBlock Text="Click '+ Add Download' or copy any file link to accelerate with Velo." FontSize="13" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                    <Button HorizontalAlignment="Center" Background="#4F46E5" Foreground="White" Padding="16,9" CornerRadius="6" Command="{Binding OpenAddDownloadDialogCommand}">
+                        <TextBlock Text="Add First URL" FontWeight="Medium" />
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Bottom Status Bar -->
+            <Border Grid.Row="2" Background="#14171F" BorderBrush="#252A36" BorderThickness="0,1,0,0" Padding="16,8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Ready • Windows 10 x64 Engine • Offline-first (Zero Telemetry)" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                        <TextBlock Text="Active Streams: 0/24" FontSize="12" Foreground="#94A3B8" />
+                        <TextBlock Text="Speed: 0.0 MB/s" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

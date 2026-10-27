@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "Velo Download Companion",
+  "version": "1.0.0",
+  "description": "Firefox companion extension to send downloads to Velo Download Accelerator.",
+  "permissions": [
+    "contextMenus",
+    "nativeMessaging"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "velo-companion@ahmed-el4enawy.github.io"
+    }
+  }
+}
