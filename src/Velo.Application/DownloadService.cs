@@ -305,4 +305,21 @@ public sealed class DownloadService : IDownloadService
         await _repository.UpdateDownloadAsync(job, cancellationToken);
         JobStateChanged?.Invoke(job);
     }
+
+    public async Task StopAllDownloadsAsync(CancellationToken cancellationToken = default)
+    {
+        _logger?.LogInformation("Stopping all active downloads for clean application shutdown.");
+        foreach (var kvp in _activeCancellations)
+        {
+            try
+            {
+                kvp.Value.Cancel();
+            }
+            catch { }
+        }
+
+        // Brief delay to allow background writers to finish flushing current chunks
+        await Task.Delay(250, cancellationToken).ConfigureAwait(false);
+    }
 }
+

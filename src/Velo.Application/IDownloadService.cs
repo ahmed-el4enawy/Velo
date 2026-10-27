@@ -16,4 +16,5 @@ public interface IDownloadService
     Task<IReadOnlyList<DownloadJob>> GetAllDownloadsAsync(CancellationToken cancellationToken = default);
     Task RedownloadAsync(Guid downloadId, CancellationToken cancellationToken = default);
     Task UpdateJobAsync(DownloadJob job, CancellationToken cancellationToken = default);
+    Task StopAllDownloadsAsync(CancellationToken cancellationToken = default);
 }
