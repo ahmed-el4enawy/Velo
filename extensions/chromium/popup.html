@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Velo Download Accelerator</title>
+  <style>
+    body {
+      width: 300px;
+      margin: 0;
+      padding: 14px;
+      background: #18191E;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #2B2E38;
+      padding-bottom: 10px;
+    }
+    .header img {
+      width: 28px;
+      height: 28px;
+    }
+    .header h1 {
+      font-size: 14px;
+      margin: 0;
+      font-weight: 700;
+      color: #F8FAFC;
+    }
+    .header p {
+      font-size: 11px;
+      margin: 2px 0 0 0;
+      color: #94A3B8;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #142E28;
+      border: 1px solid #059669;
+      color: #34D399;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-bottom: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #10B981;
+      border-radius: 50%;
+    }
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #20232B;
+      border: 1px solid #2C303B;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+    }
+    .toggle-label {
+      font-size: 12px;
+      color: #E2E8F0;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #374151;
+      transition: .2s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #10B981;
+    }
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+    .input-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: #121316;
+      border: 1px solid #2F333F;
+      color: #F8FAFC;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #6366F1;
+    }
+    button {
+      background: #4F46E5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #4338CA;
+    }
+    .btn-secondary {
+      width: 100%;
+      background: #252832;
+      border: 1px solid #363B48;
+      color: #E2E8F0;
+      padding: 8px;
+      margin-top: 4px;
+    }
+    .btn-secondary:hover {
+      background: #2E3340;
+    }
+    .feedback {
+      font-size: 11px;
+      margin-top: 6px;
+      display: none;
+    }
+    .feedback.success { color: #34D399; display: block; }
+    .feedback.error { color: #F87171; display: block; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon48.png" alt="Velo" />
+    <div>
+      <h1>Velo Accelerator</h1>
+      <p>Chrome Download Integration</p>
+    </div>
+  </div>
+
+  <div class="status-badge">
+    <div class="dot"></div>
+    <span>Engine: Native Bridge Active</span>
+  </div>
+
+  <div class="toggle-group">
+    <span class="toggle-label">Capture Browser Downloads</span>
+    <label class="switch">
+      <input type="checkbox" id="interceptToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="input-group">
+    <input type="text" id="urlInput" placeholder="Paste URL to download..." />
+    <button id="downloadBtn">Download</button>
+  </div>
+  <div id="feedback" class="feedback"></div>
+
+  <button class="btn-secondary" id="openManagerBtn">⚡ Open Velo Manager</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

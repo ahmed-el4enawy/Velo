@@ -1,16 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "Velo Download Companion",
+  "name": "Velo Download Accelerator",
   "version": "1.0.0",
-  "description": "Companion browser extension to send downloads to Velo Download Accelerator.",
+  "description": "High-speed multi-stream download integration for Velo Download Accelerator.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqbtU2RXFkm1Gc3DgMkP3uPHUppsB7TwpgyXxk/lMKeohCjxMYClkIiTvDCg6SoZBJqrFAW7SwiWUSqjkuU1HNaCN6TYzi2DOMajiGbhSaMd5NDFvksXr4FOl2j4kHbtbeyRTUpSRGX31PsswJ5f77ecyYef0pL0UKyf3QuHlwAlJ85f/67s62p8633JVeoYCBpZvjNg5GTQ6dSbeQ3SStxeEjHP8IhV3esTgYesm0r+3uqKrXybMNNecMN6StkGOUr0Dx5waXZuqyHhUNr0ImYefMRxBMedvHHPZYQHuK/Os8IqMSIfExlO0McHpjPrDgagzPUggjxngGTdt0uyeFQIDAQAB",
   "permissions": [
     "contextMenus",
-    "nativeMessaging"
+    "downloads",
+    "nativeMessaging",
+    "storage",
+    "notifications"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Download with Velo"
+    "default_popup": "popup.html",
+    "default_title": "Velo Download Accelerator",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
