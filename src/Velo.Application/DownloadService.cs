@@ -55,10 +55,10 @@ public sealed class DownloadService : IDownloadService
 
         var category = FileCategoryClassifier.Classify(fileName);
         string defaultFolder = !string.IsNullOrWhiteSpace(destinationFolder)
-            ? destinationFolder
+            ? SafePathValidator.SanitizeDestinationDirectory(destinationFolder)
             : FileCategoryClassifier.ResolveCategoryFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"), category);
 
-        string targetPath = Path.Combine(defaultFolder, fileName);
+        string targetPath = SafePathValidator.CombineSafePath(defaultFolder, fileName);
         string tempPath = targetPath + ".velo.part";
 
         var uri = new Uri(probeResult.EffectiveUrl);
