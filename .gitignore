@@ -7,6 +7,8 @@ artifacts/
 publish/
 TestResults/
 *.DotSettings.user
+/Velo.ico
+/VeloIcon.png
 
 ## Visual Studio
 .vs/

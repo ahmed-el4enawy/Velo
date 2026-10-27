@@ -3,273 +3,407 @@
         xmlns:vm="using:Velo.Desktop.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="680"
         x:Class="Velo.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding AppTitle}"
         Icon="/Assets/Velo.ico"
-        Width="1120" Height="720"
-        MinWidth="900" MinHeight="600"
+        Width="1140" Height="700"
+        MinWidth="900" MinHeight="550"
         WindowStartupLocation="CenterScreen"
-        Background="#12141A">
+        Background="#18181A">
 
-    <Grid ColumnDefinitions="240,*">
-        <!-- Left Sidebar Navigation Rail -->
-        <Border Grid.Column="0" Background="#181B22" BorderBrush="#252A36" BorderThickness="0,0,1,0">
-            <DockPanel Margin="16">
-                <!-- Branding Header -->
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="0,0,0,24">
-                    <Border Width="38" Height="38" CornerRadius="8" Background="#1A202C">
-                        <Image Source="/Assets/VeloIcon.png" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="VELO" FontWeight="Bold" FontSize="18" Foreground="#F8FAFC" />
-                        <TextBlock Text="Multi-Stream Engine" FontSize="11" Foreground="#94A3B8" />
-                    </StackPanel>
-                </StackPanel>
+    <Window.Styles>
+        <!-- IDM Ribbon Button Style -->
+        <Style Selector="Button.ribbonBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="MinWidth" Value="60" />
+        </Style>
+        <Style Selector="Button.ribbonBtn:pointerover">
+            <Setter Property="Background" Value="#2A2D36" />
+            <Setter Property="BorderBrush" Value="#3F4452" />
+        </Style>
 
-                <!-- Settings Button Pinned to Bottom -->
-                <Button DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                        Command="{Binding OpenSettingsDialogCommand}"
-                        Background="#242938" Foreground="#F8FAFC" Margin="0,16,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="⚙️" />
-                        <TextBlock Text="Settings" FontWeight="SemiBold" />
-                    </StackPanel>
-                </Button>
+        <!-- Category Item Style -->
+        <Style Selector="Button.categoryBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#CBD5E1" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Button.categoryBtn:pointerover">
+            <Setter Property="Background" Value="#252A36" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
 
-                <!-- Navigation Rail Filters -->
-                <ScrollViewer>
-                    <StackPanel Spacing="6">
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="All Downloads"
-                                Background="#242938" Foreground="#F8FAFC">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="📥" />
-                                <TextBlock Text="All Downloads" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Downloading"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="⚡" />
-                                <TextBlock Text="Downloading" />
-                            </StackPanel>
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Queued"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="⏳" />
-                                <TextBlock Text="Queued" />
-                            </StackPanel>
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Paused"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="⏸️" />
-                                <TextBlock Text="Paused" />
-                            </StackPanel>
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Completed"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="✅" />
-                                <TextBlock Text="Completed" />
-                            </StackPanel>
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Failed"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="❌" />
-                                <TextBlock Text="Failed" />
-                            </StackPanel>
-                        </Button>
+        <!-- Dense Data Row ListBox Item Style -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#252830" />
+        </Style>
+        <Style Selector="ListBoxItem:nth-child(2n)">
+            <Setter Property="Background" Value="#1C1E24" />
+        </Style>
+        <Style Selector="ListBoxItem:nth-child(2n+1)">
+            <Setter Property="Background" Value="#17191E" />
+        </Style>
+        <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#262C3A" />
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="#0A3A68" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+    </Window.Styles>
 
-                        <Separator Background="#252A36" Margin="0,12" />
-
-                        <TextBlock Text="CATEGORIES" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="8,4" />
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Compressed"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <TextBlock Text="📦 Compressed" />
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Video"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <TextBlock Text="🎬 Video" />
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Music"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <TextBlock Text="🎵 Music" />
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Documents"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <TextBlock Text="📄 Documents" />
-                        </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="Programs"
-                                Background="Transparent" Foreground="#94A3B8">
-                            <TextBlock Text="💻 Programs" />
-                        </Button>
-                    </StackPanel>
-                </ScrollViewer>
-            </DockPanel>
+    <DockPanel>
+        <!-- 1. Top Classical Menu Bar (Tasks, File, Downloads, View, Help) -->
+        <Border DockPanel.Dock="Top" Background="#1E1E20" BorderBrush="#2C2C30" BorderThickness="0,0,0,1">
+            <Menu Background="Transparent" Foreground="#E2E8F0" FontSize="12">
+                <MenuItem Header="Tasks">
+                    <MenuItem Header="Add new download..." Command="{Binding OpenAddDownloadDialogCommand}" InputGesture="Ctrl+N" />
+                    <MenuItem Header="Paste from clipboard" Command="{Binding PasteAndAddDownloadCommand}" InputGesture="Ctrl+V" />
+                    <Separator />
+                    <MenuItem Header="Exit" />
+                </MenuItem>
+                <MenuItem Header="File">
+                    <MenuItem Header="Stop download" Command="{Binding StopSelectedCommand}" />
+                    <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Del" />
+                </MenuItem>
+                <MenuItem Header="Downloads">
+                    <MenuItem Header="Resume All" Command="{Binding ResumeAllCommand}" />
+                    <MenuItem Header="Stop All" Command="{Binding PauseAllCommand}" />
+                    <Separator />
+                    <MenuItem Header="Delete Completed" Command="{Binding DeleteCompletedCommand}" />
+                </MenuItem>
+                <MenuItem Header="View">
+                    <MenuItem Header="Toolbar" IsChecked="True" />
+                    <MenuItem Header="Categories" IsChecked="True" />
+                </MenuItem>
+                <MenuItem Header="Help">
+                    <MenuItem Header="Options / Preferences" Command="{Binding OpenSettingsDialogCommand}" />
+                    <Separator />
+                    <MenuItem Header="About Velo..." Command="{Binding ShowAboutDialogCommand}" />
+                </MenuItem>
+            </Menu>
         </Border>
 
-        <!-- Main Content Area -->
-        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
-            <!-- Top Action Toolbar (PRD Section 4.1) -->
-            <Border Grid.Row="0" Background="#14171F" BorderBrush="#252A36" BorderThickness="0,0,0,1" Padding="16,12">
-                <Grid ColumnDefinitions="Auto,*,Auto">
-                    <!-- Actions -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                        <Button Background="#4F46E5" Foreground="White" Padding="14,8" CornerRadius="6" Command="{Binding OpenAddDownloadDialogCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="➕" VerticalAlignment="Center" />
-                                <TextBlock Text="Add Download" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding PasteAndAddDownloadCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="📋" VerticalAlignment="Center" />
-                                <TextBlock Text="Paste URL" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding ResumeAllCommand}">
-                            <TextBlock Text="▶ Resume All" />
-                        </Button>
-                        <Button Background="#242938" Foreground="#E2E8F0" Padding="12,8" CornerRadius="6" Command="{Binding PauseAllCommand}">
-                            <TextBlock Text="⏸ Pause All" />
-                        </Button>
-                    </StackPanel>
+        <!-- 2. IDM Ribbon Toolbar with vibrant neon action buttons -->
+        <Border DockPanel.Dock="Top" Background="#222328" BorderBrush="#2F323A" BorderThickness="0,0,0,1" Padding="8,5">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                    <!-- Add URL -->
+                    <Button Classes="ribbonBtn" Command="{Binding OpenAddDownloadDialogCommand}" ToolTip.Tip="Add download URL">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#06B6D4" BorderThickness="2" Background="#164E63" HorizontalAlignment="Center">
+                                <TextBlock Text="➕" FontSize="11" Foreground="#22D3EE" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Add URL" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <!-- Search Box -->
-                    <TextBox Grid.Column="2" Width="260" Watermark="Search downloads..." Text="{Binding SearchQuery}" CornerRadius="6" Background="#1E2330" BorderBrush="#2E3547" Foreground="#F8FAFC" />
-                </Grid>
+                    <!-- Resume -->
+                    <Button Classes="ribbonBtn" Command="{Binding ResumeSelectedCommand}" ToolTip.Tip="Resume selected download">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#10B981" BorderThickness="2" Background="#064E3B" HorizontalAlignment="Center">
+                                <TextBlock Text="▶" FontSize="12" Foreground="#34D399" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Resume" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stop -->
+                    <Button Classes="ribbonBtn" Command="{Binding StopSelectedCommand}" ToolTip.Tip="Stop selected download">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#EF4444" BorderThickness="2" Background="#7F1D1D" HorizontalAlignment="Center">
+                                <TextBlock Text="⏹" FontSize="11" Foreground="#F87171" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Stop" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stop All -->
+                    <Button Classes="ribbonBtn" Command="{Binding PauseAllCommand}" ToolTip.Tip="Stop all downloads">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#F97316" BorderThickness="2" Background="#7C2D12" HorizontalAlignment="Center">
+                                <TextBlock Text="🛑" FontSize="11" Foreground="#FB923C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Stop All" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Delete -->
+                    <Button Classes="ribbonBtn" Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete selected download">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#EC4899" BorderThickness="2" Background="#831843" HorizontalAlignment="Center">
+                                <TextBlock Text="🗑️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Delete" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Delete Completed -->
+                    <Button Classes="ribbonBtn" Command="{Binding DeleteCompletedCommand}" ToolTip.Tip="Delete completed downloads from list">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#A855F7" BorderThickness="2" Background="#581C87" HorizontalAlignment="Center">
+                                <TextBlock Text="🧹" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Delete C..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Separator Width="1" Height="36" Background="#3E424D" Margin="4,0" />
+
+                    <!-- Options -->
+                    <Button Classes="ribbonBtn" Command="{Binding OpenSettingsDialogCommand}" ToolTip.Tip="Options and settings">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#3B82F6" BorderThickness="2" Background="#1E3A8A" HorizontalAlignment="Center">
+                                <TextBlock Text="⚙️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Options" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Scheduler -->
+                    <Button Classes="ribbonBtn" Command="{Binding OpenSettingsDialogCommand}" ToolTip.Tip="Scheduler &amp; Concurrency limits">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#F43F5E" BorderThickness="2" Background="#881337" HorizontalAlignment="Center">
+                                <TextBlock Text="⏰" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Scheduler" FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Start Queue -->
+                    <Button Classes="ribbonBtn" Command="{Binding ResumeAllCommand}" ToolTip.Tip="Start download queue">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#10B981" BorderThickness="2" Background="#064E3B" HorizontalAlignment="Center">
+                                <TextBlock Text="▶" FontSize="11" Foreground="#34D399" Margin="2,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Start Qu..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stop Queue -->
+                    <Button Classes="ribbonBtn" Command="{Binding PauseAllCommand}" ToolTip.Tip="Stop download queue">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="4" BorderBrush="#F59E0B" BorderThickness="2" Background="#78350F" HorizontalAlignment="Center">
+                                <TextBlock Text="⏹" FontSize="11" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Stop Qu..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Tell a Friend / About -->
+                    <Button Classes="ribbonBtn" Command="{Binding ShowAboutDialogCommand}" ToolTip.Tip="About Velo">
+                        <StackPanel HorizontalAlignment="Center" Spacing="2">
+                            <Border Width="26" Height="26" CornerRadius="13" BorderBrush="#FBBF24" BorderThickness="2" Background="#713F12" HorizontalAlignment="Center">
+                                <TextBlock Text="👍" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Tell a Frie..." FontSize="10" Foreground="#F1F5F9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Search Filter Box on Right -->
+                <TextBox Grid.Column="2" Width="200" Watermark="Search list..." Text="{Binding SearchQuery}" CornerRadius="4" Background="#17181C" BorderBrush="#353945" Foreground="#F8FAFC" VerticalAlignment="Center" Height="28" FontSize="12" />
+            </Grid>
+        </Border>
+
+        <!-- 3. Bottom Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#1A1B1F" BorderBrush="#2C2E36" BorderThickness="0,1,0,0" Padding="8,4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusBarInfo}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Streams: {0}/24'}" FontSize="11" Foreground="#94A3B8" />
+                    <TextBlock Text="{Binding TotalSpeedText, StringFormat='Speed: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 4. Main Body: Left Categories Tree + Right IDM Downloads Table -->
+        <Grid ColumnDefinitions="210,4,*">
+            <!-- Left Categories Box -->
+            <Border Grid.Column="0" Background="#1A1C22" BorderBrush="#2D313C" BorderThickness="1" Margin="6,6,0,6" CornerRadius="2">
+                <DockPanel>
+                    <!-- Header -->
+                    <Border DockPanel.Dock="Top" Background="#242832" Padding="8,5" BorderBrush="#2D313C" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Categories" FontWeight="Bold" FontSize="11" Foreground="#CBD5E1" />
+                    </Border>
+
+                    <ScrollViewer>
+                        <StackPanel Spacing="1" Margin="4,4">
+                            <!-- All Downloads -->
+                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="All Downloads" FontWeight="SemiBold">
+                                <TextBlock Text="📁 All Downloads" />
+                            </Button>
+
+                            <!-- Subcategories -->
+                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Compressed">
+                                <TextBlock Text="🗜️ Compressed" />
+                            </Button>
+                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Documents">
+                                <TextBlock Text="📄 Documents" />
+                            </Button>
+                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Music">
+                                <TextBlock Text="🎵 Music" />
+                            </Button>
+                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Programs">
+                                <TextBlock Text="💻 Programs" />
+                            </Button>
+                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Video">
+                                <TextBlock Text="🎬 Video" />
+                            </Button>
+
+                            <Separator Background="#2D313C" Margin="0,4" />
+
+                            <!-- Status filters -->
+                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Unfinished">
+                                <TextBlock Text="⏳ Unfinished" />
+                            </Button>
+                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Finished">
+                                <TextBlock Text="✅ Finished" />
+                            </Button>
+                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Grabber projects">
+                                <TextBlock Text="🌐 Grabber projects" />
+                            </Button>
+                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Queues">
+                                <TextBlock Text="📋 Queues" />
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
             </Border>
 
-            <!-- Download List Area -->
-            <ScrollViewer Grid.Row="1" Padding="16">
-                <ItemsControl ItemsSource="{Binding FilteredDownloads}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:DownloadItemViewModel">
-                            <Border Background="#181B24" BorderBrush="#262D3D" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
-                                <StackPanel Spacing="10">
-                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
-                                        <!-- Title & Host -->
-                                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="15" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding Host}" FontSize="12" Foreground="#64748B" />
-                                        </StackPanel>
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Background="#18181A" ResizeDirection="Columns" />
 
-                                        <!-- Status Badge & Speed -->
-                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
-                                            <Border CornerRadius="4" Padding="8,4" Background="#1E293B">
-                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="Bold" FontSize="11" />
-                                            </Border>
-                                            <TextBlock Text="{Binding SpeedText}" Foreground="#10B981" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
-                                        </StackPanel>
+            <!-- Right Downloads Data Table -->
+            <Border Grid.Column="2" Background="#17191E" BorderBrush="#2D313C" BorderThickness="1" Margin="0,6,6,6" CornerRadius="2">
+                <DockPanel>
+                    <!-- Table Column Header Row -->
+                    <Border DockPanel.Dock="Top" Background="#232732" BorderBrush="#2D313C" BorderThickness="0,0,0,1" Height="24">
+                        <Grid ColumnDefinitions="280,30,85,90,80,100,105,*">
+                            <!-- File Name -->
+                            <Border Grid.Column="0" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="File Name" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </Border>
 
-                                        <!-- Progress Bar -->
-                                        <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="6" CornerRadius="3" Margin="0,12"
-                                                     Value="{Binding ProgressPercentage}" Maximum="100" Background="#232938" Foreground="#6366F1" />
+                            <!-- Q (Queue) -->
+                            <Border Grid.Column="1" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="4,4">
+                                <TextBlock Text="Q" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
 
-                                        <!-- Footer Stats & Actions -->
-                                        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto">
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding SizeInfo}" FontSize="12" Foreground="#94A3B8" />
-                                                <TextBlock Text="{Binding EtaText}" FontSize="12" Foreground="#64748B" />
-                                            </StackPanel>
+                            <!-- Size -->
+                            <Border Grid.Column="2" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="Size" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Border>
 
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding ToggleDetailsCommand}" Content="🔍 Details" />
-                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding ResumeCommand}" Content="▶ Resume" />
-                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding PauseCommand}" Content="⏸ Pause" />
-                                                <Button Padding="10,5" CornerRadius="5" Background="#272F42" Foreground="#E2E8F0" FontSize="12" Command="{Binding OpenFolderCommand}" Content="📂 Folder" />
-                                                <Button Padding="10,5" CornerRadius="5" Background="#3B2329" Foreground="#F87171" FontSize="12" Command="{Binding CancelCommand}" Content="✕ Cancel" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Grid>
+                            <!-- Status -->
+                            <Border Grid.Column="3" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="Status" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </Border>
 
-                                    <!-- Details Inspector Panel (PRD Section 4.1) -->
-                                    <Border IsVisible="{Binding IsDetailsExpanded}" Background="#13161F" BorderBrush="#262D3D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
-                                        <StackPanel Spacing="10">
-                                            <TextBlock Text="DOWNLOAD DIAGNOSTICS &amp; HTTP INSPECTOR" FontSize="11" FontWeight="Bold" Foreground="#818CF8" />
+                            <!-- Time left -->
+                            <Border Grid.Column="4" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="Time left" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </Border>
 
-                                            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Effective URL:" FontSize="11" Foreground="#94A3B8" />
-                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding EffectiveUrl}" FontSize="11" Foreground="#F8FAFC" TextWrapping="Wrap" />
+                            <!-- Transfer rate -->
+                            <Border Grid.Column="5" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="Transfer rate" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Border>
 
-                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Target Path:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TargetPath}" FontSize="11" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            <!-- Last Try Date -->
+                            <Border Grid.Column="6" BorderBrush="#353A47" BorderThickness="0,0,1,0" Padding="8,4">
+                                <TextBlock Text="Last Try Date" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </Border>
 
-                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Range Support:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RangeSupportText}" FontSize="11" Foreground="#10B981" Margin="0,4,0,0" />
+                            <!-- Description -->
+                            <Border Grid.Column="7" Padding="8,4">
+                                <TextBlock Text="Description" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
 
-                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="ETag / Modified:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding EtagText}" FontSize="11" Foreground="#F8FAFC" Margin="0,4,0,0" />
+                    <!-- Table Data Rows -->
+                    <ListBox ItemsSource="{Binding FilteredDownloads}" SelectedItem="{Binding SelectedDownload}" Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DownloadItemViewModel">
+                                <Grid ColumnDefinitions="280,30,85,90,80,100,105,*">
+                                    <Grid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Resume" Command="{Binding ResumeCommand}" />
+                                            <MenuItem Header="Pause / Stop" Command="{Binding PauseCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="Open File" Command="{Binding OpenFileCommand}" />
+                                            <MenuItem Header="Open Folder" Command="{Binding OpenFolderCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+                                            <MenuItem Header="Details..." Command="{Binding ToggleDetailsCommand}" />
+                                        </ContextMenu>
+                                    </Grid.ContextMenu>
 
-                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Category / Priority:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                                                    <TextBlock Text="{Binding CategoryText}" FontSize="11" Foreground="#F8FAFC" />
-                                                    <TextBlock Text="•" FontSize="11" Foreground="#64748B" />
-                                                    <TextBlock Text="{Binding PriorityText}" FontSize="11" Foreground="#F8FAFC" />
-                                                </StackPanel>
-
-                                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Timestamps:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                                                    <TextBlock Text="Created: " FontSize="11" Foreground="#64748B" />
-                                                    <TextBlock Text="{Binding CreatedAtText}" FontSize="11" Foreground="#F8FAFC" />
-                                                    <TextBlock Text="• Finished: " FontSize="11" Foreground="#64748B" />
-                                                    <TextBlock Text="{Binding FinishedAtText}" FontSize="11" Foreground="#F8FAFC" />
-                                                </StackPanel>
-
-                                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Diagnostic Info:" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" />
-                                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding FailureDetailsText}" FontSize="11" Foreground="#EF4444" Margin="0,4,0,0" />
-                                            </Grid>
-
-                                            <!-- Multi-Stream Segments Grid -->
-                                            <StackPanel Spacing="6" Margin="0,6,0,0" IsVisible="{Binding SegmentsCount}">
-                                                <TextBlock Text="CONCURRENT STREAM CHUNKS" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
-                                                <ItemsControl ItemsSource="{Binding Segments}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="vm:SegmentDisplayModel">
-                                                            <Grid ColumnDefinitions="30,160,*,70" Margin="0,2">
-                                                                <TextBlock Grid.Column="0" Text="{Binding Index, StringFormat='#{0}'}" FontSize="11" Foreground="#818CF8" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                                                <TextBlock Grid.Column="1" Text="{Binding RangeText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
-                                                                <ProgressBar Grid.Column="2" Height="4" Value="{Binding ProgressPercentage}" Maximum="100" Background="#1E2330" Foreground="#6366F1" Margin="8,0" VerticalAlignment="Center" />
-                                                                <TextBlock Grid.Column="3" Text="{Binding StateText}" FontSize="10" Foreground="#38BDF8" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
+                                    <!-- 0: File Name with icon -->
+                                    <Border Grid.Column="0" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding FileIconEmoji}" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="11" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Border>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
 
-            <!-- Bottom Status Bar -->
-            <Border Grid.Row="2" Background="#14171F" BorderBrush="#252A36" BorderThickness="0,1,0,0" Padding="16,8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" Text="Ready • Windows 10 x64 Engine • Offline-first (Zero Telemetry)" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                        <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Active Streams: {0}/24'}" FontSize="12" Foreground="#94A3B8" />
-                        <TextBlock Text="{Binding TotalSpeedText, StringFormat='Total Speed: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" />
-                    </StackPanel>
-                </Grid>
+                                    <!-- 1: Q indicator -->
+                                    <Border Grid.Column="1" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="2,2">
+                                        <TextBlock Text="📁" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" />
+                                    </Border>
+
+                                    <!-- 2: Size -->
+                                    <Border Grid.Column="2" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding FormattedSizeOnly}" FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- 3: Status -->
+                                    <Border Grid.Column="3" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding StatusDisplay}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- 4: Time left -->
+                                    <Border Grid.Column="4" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding TimeLeftText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- 5: Transfer rate -->
+                                    <Border Grid.Column="5" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding TransferRateText}" FontSize="11" Foreground="#10B981" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- 6: Last Try Date -->
+                                    <Border Grid.Column="6" BorderBrush="#252830" BorderThickness="0,0,1,0" Padding="8,2">
+                                        <TextBlock Text="{Binding LastTryDateText}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- 7: Description / Host -->
+                                    <Border Grid.Column="7" Padding="8,2">
+                                        <TextBlock Text="{Binding Host}" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
             </Border>
         </Grid>
-    </Grid>
+    </DockPanel>
 </Window>

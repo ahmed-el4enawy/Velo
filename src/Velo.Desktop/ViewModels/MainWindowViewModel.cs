@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IServiceProvider? _serviceProvider;
 
     [ObservableProperty]
-    private string _appTitle = "Velo — Next-Gen Download Accelerator";
+    private string _appTitle = "Velo — Download Accelerator";
 
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -30,6 +31,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private int _activeStreamsCount;
+
+    [ObservableProperty]
+    private string _statusBarInfo = "Ready";
 
     [ObservableProperty]
     private DownloadItemViewModel? _selectedDownload;
@@ -67,6 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Downloads.Add(item);
         }
         ApplyFilter();
+        SelectedDownload = FilteredDownloads.FirstOrDefault();
     }
 
     private void OnDownloadProgressUpdated(Guid downloadId, long currentBytes, double speedBytesPerSec)
@@ -99,14 +104,24 @@ public partial class MainWindowViewModel : ViewModelBase
     private void UpdateAggregateMetrics()
     {
         int streams = 0;
+        int activeCount = 0;
+        int completeCount = 0;
+
         foreach (var item in Downloads)
         {
             if (item.Job.State == JobState.Downloading)
             {
                 streams += item.SegmentsCount > 0 ? item.SegmentsCount : 1;
+                activeCount++;
+            }
+            else if (item.Job.State == JobState.Completed)
+            {
+                completeCount++;
             }
         }
+
         ActiveStreamsCount = streams;
+        StatusBarInfo = $"{Downloads.Count} downloads ({completeCount} complete, {activeCount} downloading)";
     }
 
     partial void OnSearchQueryChanged(string value) => ApplyFilter();
@@ -115,12 +130,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void SelectCategory(string category)
     {
-        if (category == "Settings")
-        {
-            OpenSettingsDialog();
-            return;
-        }
-
         ActiveCategory = category;
     }
 
@@ -166,21 +175,32 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
 
-        // If clipboard doesn't contain a direct URL, open the blank dialog
         OpenAddDownloadDialog(null);
     }
 
     [RelayCommand]
-    private void OpenSettingsDialog()
+    private async Task ResumeSelectedAsync()
     {
-        if (_serviceProvider == null) return;
-
-        var vm = _serviceProvider.GetRequiredService<SettingsWindowViewModel>();
-        var dialog = new SettingsWindow(vm);
-
-        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        if (SelectedDownload != null)
         {
-            dialog.ShowDialog(desktop.MainWindow!);
+            await SelectedDownload.ResumeCommand.ExecuteAsync(null);
+        }
+        else
+        {
+            await ResumeAllAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task StopSelectedAsync()
+    {
+        if (SelectedDownload != null)
+        {
+            await SelectedDownload.PauseCommand.ExecuteAsync(null);
+        }
+        else
+        {
+            await PauseAllAsync();
         }
     }
 
@@ -204,6 +224,53 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedDownload != null && _downloadService != null)
+        {
+            var target = SelectedDownload;
+            await _downloadService.DeleteDownloadAsync(target.Job.Id, deleteFiles: false);
+            Downloads.Remove(target);
+            ApplyFilter();
+            SelectedDownload = FilteredDownloads.FirstOrDefault();
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteCompletedAsync()
+    {
+        if (_downloadService == null) return;
+        var completed = Downloads.Where(d => d.Job.State == JobState.Completed).ToList();
+        foreach (var item in completed)
+        {
+            await _downloadService.DeleteDownloadAsync(item.Job.Id, deleteFiles: false);
+            Downloads.Remove(item);
+        }
+        ApplyFilter();
+        SelectedDownload = FilteredDownloads.FirstOrDefault();
+    }
+
+    [RelayCommand]
+    private void OpenSettingsDialog()
+    {
+        if (_serviceProvider == null) return;
+
+        var vm = _serviceProvider.GetRequiredService<SettingsWindowViewModel>();
+        var dialog = new SettingsWindow(vm);
+
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            dialog.ShowDialog(desktop.MainWindow!);
+        }
+    }
+
+    [RelayCommand]
+    private void ShowAboutDialog()
+    {
+        OpenSettingsDialog();
+    }
+
     private void ApplyFilter()
     {
         FilteredDownloads.Clear();
@@ -218,16 +285,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         query = ActiveCategory switch
         {
-            "Downloading" => query.Where(d => d.Job.State == JobState.Downloading),
-            "Queued" => query.Where(d => d.Job.State == JobState.Queued),
-            "Paused" => query.Where(d => d.Job.State == JobState.Paused),
-            "Completed" => query.Where(d => d.Job.State == JobState.Completed),
-            "Failed" => query.Where(d => d.Job.State is JobState.Failed or JobState.Interrupted),
+            "All Downloads" => query,
             "Compressed" => query.Where(d => d.Job.Category == CategoryType.Compressed),
-            "Video" => query.Where(d => d.Job.Category == CategoryType.Video),
-            "Music" => query.Where(d => d.Job.Category == CategoryType.Music),
             "Documents" => query.Where(d => d.Job.Category == CategoryType.Documents),
+            "Music" => query.Where(d => d.Job.Category == CategoryType.Music),
             "Programs" => query.Where(d => d.Job.Category == CategoryType.Programs),
+            "Video" => query.Where(d => d.Job.Category == CategoryType.Video),
+            "Unfinished" => query.Where(d => d.Job.State is JobState.Downloading or JobState.Paused or JobState.Queued or JobState.Interrupted),
+            "Finished" => query.Where(d => d.Job.State == JobState.Completed),
+            "Grabber projects" => query.Where(d => false),
+            "Queues" => query.Where(d => d.Job.State == JobState.Queued),
             _ => query
         };
 
@@ -235,5 +302,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             FilteredDownloads.Add(item);
         }
+
+        UpdateAggregateMetrics();
     }
 }

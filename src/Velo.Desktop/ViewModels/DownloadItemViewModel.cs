@@ -56,6 +56,44 @@ public partial class DownloadItemViewModel : ViewModelBase
         ? $"{Job.FailureCode}: {Job.FailureReason}"
         : "None (Clean)";
 
+    public string FileIconEmoji => Job.Category switch
+    {
+        CategoryType.Compressed => "🗜️",
+        CategoryType.Video => "🎬",
+        CategoryType.Music => "🎵",
+        CategoryType.Documents => "📄",
+        CategoryType.Programs => "💻",
+        _ => Path.GetExtension(Job.DisplayName).ToLowerInvariant() switch
+        {
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".webp" => "🖼️",
+            ".pdf" => "📕",
+            ".zip" or ".rar" or ".7z" or ".tar" or ".gz" or ".iso" => "🗜️",
+            ".exe" or ".msi" => "💻",
+            _ => "📄"
+        }
+    };
+
+    public string FormattedSizeOnly => Job.ExpectedBytes.HasValue
+        ? FormatBytes(Job.ExpectedBytes.Value)
+        : (Job.DownloadedBytes > 0 ? FormatBytes(Job.DownloadedBytes) : "--");
+
+    public string LastTryDateText => Job.UpdatedAt.ToLocalTime().ToString("MMM dd HH:mm");
+    public string TimeLeftText => EtaText;
+    public string TransferRateText => SpeedText;
+
+    public string StatusDisplay => Job.State switch
+    {
+        JobState.Completed => "Complete",
+        JobState.Downloading => "Downloading",
+        JobState.Paused => "Paused",
+        JobState.Queued => "Queued",
+        JobState.Failed => "Error",
+        JobState.Interrupted => "Interrupted",
+        JobState.Canceled => "Canceled",
+        JobState.Verifying => "Verifying",
+        _ => Job.State.ToString()
+    };
+
     public ObservableCollection<SegmentDisplayModel> Segments { get; } = [];
 
     public DownloadItemViewModel(DownloadJob job, IDownloadService downloadService)
@@ -101,6 +139,12 @@ public partial class DownloadItemViewModel : ViewModelBase
             EtaText = "--";
         }
 
+        OnPropertyChanged(nameof(StatusDisplay));
+        OnPropertyChanged(nameof(TransferRateText));
+        OnPropertyChanged(nameof(TimeLeftText));
+        OnPropertyChanged(nameof(LastTryDateText));
+        OnPropertyChanged(nameof(FormattedSizeOnly));
+
         // Update segments if present
         if (Job.Segments.Count > 0)
         {
@@ -125,32 +169,46 @@ public partial class DownloadItemViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task PauseAsync()
+    public async Task PauseAsync()
     {
         await _downloadService.PauseDownloadAsync(Job.Id);
         StatusText = JobState.Paused.ToString();
         StatusColor = GetStatusColor(JobState.Paused);
         SpeedText = "0 KB/s";
+        OnPropertyChanged(nameof(StatusDisplay));
+        OnPropertyChanged(nameof(TransferRateText));
     }
 
     [RelayCommand]
-    private async Task ResumeAsync()
+    public async Task ResumeAsync()
     {
         await _downloadService.ResumeDownloadAsync(Job.Id);
         StatusText = JobState.Downloading.ToString();
         StatusColor = GetStatusColor(JobState.Downloading);
+        OnPropertyChanged(nameof(StatusDisplay));
     }
 
     [RelayCommand]
-    private async Task CancelAsync()
+    public async Task DeleteAsync()
     {
-        await _downloadService.CancelDownloadAsync(Job.Id, deletePartialFiles: true);
-        StatusText = JobState.Canceled.ToString();
-        StatusColor = GetStatusColor(JobState.Canceled);
+        await _downloadService.DeleteDownloadAsync(Job.Id, deleteFiles: false);
     }
 
     [RelayCommand]
-    private void OpenFolder()
+    public void OpenFile()
+    {
+        if (Job.State == JobState.Completed && File.Exists(Job.TargetPath))
+        {
+            Process.Start(new ProcessStartInfo(Job.TargetPath) { UseShellExecute = true });
+        }
+        else
+        {
+            OpenFolder();
+        }
+    }
+
+    [RelayCommand]
+    public void OpenFolder()
     {
         string path = Job.TargetPath;
         if (File.Exists(path))
@@ -200,13 +258,13 @@ public partial class DownloadItemViewModel : ViewModelBase
             order++;
             len /= 1024;
         }
-        return $"{len:0.#} {sizes[order]}";
+        return $"{len:0.##} {sizes[order]}";
     }
 
     private static string GetStatusColor(JobState state) => state switch
     {
         JobState.Downloading => "#10B981", // Emerald Green
-        JobState.Completed => "#3B82F6",   // Blue
+        JobState.Completed => "#38BDF8",   // Light Sky Blue
         JobState.Paused => "#F59E0B",      // Amber
         JobState.Failed => "#EF4444",      // Red
         JobState.Canceled => "#64748B",    // Gray
