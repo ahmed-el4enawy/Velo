@@ -196,6 +196,27 @@ public sealed class DownloadService : IDownloadService
         }
     }
 
+    public async Task DeleteDownloadAsync(Guid downloadId, bool deleteFiles = false, CancellationToken cancellationToken = default)
+    {
+        await CancelDownloadAsync(downloadId, deletePartialFiles: deleteFiles, cancellationToken);
+        var job = await _repository.GetDownloadByIdAsync(downloadId, cancellationToken);
+        if (job != null)
+        {
+            if (deleteFiles)
+            {
+                if (File.Exists(job.TargetPath))
+                {
+                    try { File.Delete(job.TargetPath); } catch { /* Ignore file lock */ }
+                }
+                if (File.Exists(job.TempPath))
+                {
+                    try { File.Delete(job.TempPath); } catch { /* Ignore file lock */ }
+                }
+            }
+            await _repository.DeleteDownloadAsync(downloadId, cancellationToken);
+        }
+    }
+
     public Task<IReadOnlyList<DownloadJob>> GetAllDownloadsAsync(CancellationToken cancellationToken = default)
     {
         return _repository.GetAllDownloadsAsync(cancellationToken);
