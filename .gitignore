@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C / C++ / C# build artifacts
+[Bb]in/
+[Oo]bj/
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.next/
+
+# Environments
+.env
+.env.local
+.venv
+env/
+venv/
+ENV/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Velo Runtime / Downloads / Partials
+*.part
+*.velo-temp
+downloads/
+temp/
+logs/
