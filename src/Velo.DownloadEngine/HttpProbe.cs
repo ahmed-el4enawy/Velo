@@ -202,10 +202,21 @@ public sealed class HttpProbe : IHttpProbe
 
         // filename* takes precedence (RFC 5987 / 6266)
         if (!string.IsNullOrWhiteSpace(disposition.FileNameStar))
-            return disposition.FileNameStar;
+        {
+            string raw = disposition.FileNameStar;
+            // Format can be UTF-8''encoded_name.ext
+            int tickIdx = raw.LastIndexOf("''", StringComparison.Ordinal);
+            if (tickIdx >= 0 && tickIdx + 2 < raw.Length)
+            {
+                raw = raw[(tickIdx + 2)..];
+            }
+            return Uri.UnescapeDataString(raw.Trim('"'));
+        }
 
         if (!string.IsNullOrWhiteSpace(disposition.FileName))
-            return disposition.FileName.Trim('"');
+        {
+            return Uri.UnescapeDataString(disposition.FileName.Trim('"'));
+        }
 
         return null;
     }
