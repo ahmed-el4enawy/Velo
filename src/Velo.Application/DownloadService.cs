@@ -41,13 +41,14 @@ public sealed class DownloadService : IDownloadService
             throw new InvalidOperationException($"Unable to probe download URL: {probeResult.ErrorMessage}");
         }
 
-        string defaultFolder = !string.IsNullOrWhiteSpace(destinationFolder)
-            ? destinationFolder
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-
         string fileName = !string.IsNullOrWhiteSpace(customFileName)
             ? SafePathValidator.SanitizeFileName(customFileName)
             : probeResult.ContentDispositionFileName ?? "download.bin";
+
+        var category = FileCategoryClassifier.Classify(fileName);
+        string defaultFolder = !string.IsNullOrWhiteSpace(destinationFolder)
+            ? destinationFolder
+            : FileCategoryClassifier.ResolveCategoryFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"), category);
 
         string targetPath = Path.Combine(defaultFolder, fileName);
         string tempPath = targetPath + ".velo.part";
@@ -66,6 +67,7 @@ public sealed class DownloadService : IDownloadService
             StrongETag = probeResult.ETag,
             LastModified = probeResult.LastModified,
             RangeSupported = probeResult.RangeSupported,
+            Category = category,
             State = JobState.Created
         };
 

@@ -19,6 +19,7 @@ public sealed class DownloadJob
     public bool RangeSupported { get; set; }
     public JobState State { get; set; } = JobState.Created;
     public JobPriority Priority { get; set; } = JobPriority.Normal;
+    public CategoryType Category { get; set; } = CategoryType.Others;
     public string? FailureCode { get; set; }
     public string? FailureReason { get; set; }
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;

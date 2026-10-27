@@ -125,6 +125,11 @@ public partial class MainWindowViewModel : ViewModelBase
             "Paused" => query.Where(d => d.Job.State == JobState.Paused),
             "Completed" => query.Where(d => d.Job.State == JobState.Completed),
             "Failed" => query.Where(d => d.Job.State is JobState.Failed or JobState.Interrupted),
+            "Compressed" => query.Where(d => d.Job.Category == CategoryType.Compressed),
+            "Video" => query.Where(d => d.Job.Category == CategoryType.Video),
+            "Music" => query.Where(d => d.Job.Category == CategoryType.Music),
+            "Documents" => query.Where(d => d.Job.Category == CategoryType.Documents),
+            "Programs" => query.Where(d => d.Job.Category == CategoryType.Programs),
             _ => query
         };
 

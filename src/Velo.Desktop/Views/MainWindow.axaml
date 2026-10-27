@@ -82,19 +82,29 @@
                         <Separator Background="#252A36" Margin="0,12" />
 
                         <TextBlock Text="CATEGORIES" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="8,4" />
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
+                                Command="{Binding SelectCategoryCommand}" CommandParameter="Compressed"
+                                Background="Transparent" Foreground="#94A3B8">
                             <TextBlock Text="📦 Compressed" />
                         </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
+                                Command="{Binding SelectCategoryCommand}" CommandParameter="Video"
+                                Background="Transparent" Foreground="#94A3B8">
                             <TextBlock Text="🎬 Video" />
                         </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
+                                Command="{Binding SelectCategoryCommand}" CommandParameter="Music"
+                                Background="Transparent" Foreground="#94A3B8">
                             <TextBlock Text="🎵 Music" />
                         </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
+                                Command="{Binding SelectCategoryCommand}" CommandParameter="Documents"
+                                Background="Transparent" Foreground="#94A3B8">
                             <TextBlock Text="📄 Documents" />
                         </Button>
-                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6" Background="Transparent" Foreground="#94A3B8">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8" CornerRadius="6"
+                                Command="{Binding SelectCategoryCommand}" CommandParameter="Programs"
+                                Background="Transparent" Foreground="#94A3B8">
                             <TextBlock Text="💻 Programs" />
                         </Button>
                     </StackPanel>

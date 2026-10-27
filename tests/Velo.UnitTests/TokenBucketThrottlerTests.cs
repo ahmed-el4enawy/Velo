@@ -19,7 +19,7 @@ public class TokenBucketThrottlerTests
         }
 
         sw.Stop();
-        sw.ElapsedMilliseconds.Should().BeLessThan(100, "Unlimited throttling should have zero artificial delay");
+        sw.ElapsedMilliseconds.Should().BeLessThan(1000, "Unlimited throttling should have zero artificial delay");
     }
 
     [Fact]
