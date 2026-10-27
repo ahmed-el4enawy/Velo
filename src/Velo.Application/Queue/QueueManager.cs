@@ -6,6 +6,7 @@ namespace Velo.Application.Queue;
 
 /// <summary>
 /// Thread-safe queue coordinator enforcing active concurrency limits and priority-based scheduling (PRD Section 6).
+/// Automatically promotes queued jobs when active transfers complete or transition out of downloading.
 /// </summary>
 public sealed class QueueManager : IQueueManager
 {
@@ -28,6 +29,14 @@ public sealed class QueueManager : IQueueManager
         _repository = repository;
         _downloadService = downloadService;
         _logger = logger;
+
+        _downloadService.JobStateChanged += job =>
+        {
+            if (job.State is JobState.Completed or JobState.Failed or JobState.Canceled or JobState.Paused)
+            {
+                _ = NotifyJobStateChangedAsync(job.Id);
+            }
+        };
     }
 
     public async Task EnqueueAsync(Guid downloadId, CancellationToken cancellationToken = default)

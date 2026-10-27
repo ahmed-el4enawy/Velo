@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Velo.Domain;
 using Velo.DownloadEngine;
@@ -16,6 +17,9 @@ public sealed class DownloadService : IDownloadService
     private readonly IDownloadRepository _repository;
     private readonly ILogger<DownloadService>? _logger;
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeCancellations = new();
+
+    public event Action<Guid, long, double>? DownloadProgressUpdated;
+    public event Action<DownloadJob>? JobStateChanged;
 
     public DownloadService(
         IHttpProbe probe,
@@ -77,6 +81,7 @@ public sealed class DownloadService : IDownloadService
         }
 
         await _repository.AddDownloadAsync(job, cancellationToken);
+        JobStateChanged?.Invoke(job);
         return job;
     }
 
@@ -98,20 +103,40 @@ public sealed class DownloadService : IDownloadService
         // Fire and coordinate download task in background
         _ = Task.Run(async () =>
         {
+            long lastReportTimestamp = Stopwatch.GetTimestamp();
+            long bytesInInterval = 0;
+
             try
             {
-                var progress = new Progress<long>(bytes =>
+                var progress = new Progress<long>(chunkBytes =>
                 {
-                    job.DownloadedBytes += bytes;
+                    job.DownloadedBytes += chunkBytes;
+                    Interlocked.Add(ref bytesInInterval, chunkBytes);
+
+                    long now = Stopwatch.GetTimestamp();
+                    double elapsedSec = (double)(now - lastReportTimestamp) / Stopwatch.Frequency;
+                    if (elapsedSec >= 0.2) // 5 times/sec (PRD Section 11: 4-10 times/sec)
+                    {
+                        long delta = Interlocked.Exchange(ref bytesInInterval, 0);
+                        double currentSpeed = delta / Math.Max(0.001, elapsedSec);
+                        lastReportTimestamp = now;
+
+                        DownloadProgressUpdated?.Invoke(job.Id, job.DownloadedBytes, currentSpeed);
+                    }
                 });
+
+                job.State = JobState.Downloading;
+                JobStateChanged?.Invoke(job);
 
                 await _engine.ExecuteDownloadAsync(job, progress, cts.Token);
                 await _repository.UpdateDownloadAsync(job, CancellationToken.None);
+                JobStateChanged?.Invoke(job);
             }
             catch (OperationCanceledException)
             {
                 job.State = JobState.Paused;
                 await _repository.UpdateDownloadAsync(job, CancellationToken.None);
+                JobStateChanged?.Invoke(job);
             }
             catch (Exception ex)
             {
@@ -119,6 +144,7 @@ public sealed class DownloadService : IDownloadService
                 job.FailureCode = ex.GetType().Name;
                 job.FailureReason = ex.Message;
                 await _repository.UpdateDownloadAsync(job, CancellationToken.None);
+                JobStateChanged?.Invoke(job);
             }
             finally
             {
@@ -140,6 +166,7 @@ public sealed class DownloadService : IDownloadService
         {
             job.State = JobState.Paused;
             await _repository.UpdateDownloadAsync(job, cancellationToken);
+            JobStateChanged?.Invoke(job);
         }
     }
 
@@ -160,6 +187,7 @@ public sealed class DownloadService : IDownloadService
         {
             job.State = JobState.Canceled;
             await _repository.UpdateDownloadAsync(job, cancellationToken);
+            JobStateChanged?.Invoke(job);
 
             if (deletePartialFiles && File.Exists(job.TempPath))
             {
