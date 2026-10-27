@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -36,6 +37,27 @@ public partial class DownloadItemViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusColor;
 
+    [ObservableProperty]
+    private bool _isDetailsExpanded;
+
+    public string OriginalUrl => Job.OriginalUrl;
+    public string EffectiveUrl => Job.EffectiveUrl;
+    public string TargetPath => Job.TargetPath;
+    public string TempPath => Job.TempPath;
+    public string RangeSupportText => Job.RangeSupported ? "Supported (HTTP 206 Multi-stream)" : "Unsupported (Sequential Fallback)";
+    public string EtagText => string.IsNullOrWhiteSpace(Job.StrongETag) ? "--" : Job.StrongETag;
+    public string LastModifiedText => string.IsNullOrWhiteSpace(Job.LastModified) ? "--" : Job.LastModified;
+    public string CreatedAtText => Job.CreatedAt.ToLocalTime().ToString("g");
+    public string FinishedAtText => Job.FinishedAt?.ToLocalTime().ToString("g") ?? "--";
+    public string CategoryText => Job.Category.ToString();
+    public string PriorityText => Job.Priority.ToString();
+    public int SegmentsCount => Job.Segments.Count;
+    public string FailureDetailsText => !string.IsNullOrEmpty(Job.FailureCode)
+        ? $"{Job.FailureCode}: {Job.FailureReason}"
+        : "None (Clean)";
+
+    public ObservableCollection<SegmentDisplayModel> Segments { get; } = [];
+
     public DownloadItemViewModel(DownloadJob job, IDownloadService downloadService)
     {
         Job = job;
@@ -46,6 +68,17 @@ public partial class DownloadItemViewModel : ViewModelBase
         _sizeInfo = FormatSize(job.DownloadedBytes, job.ExpectedBytes);
         _statusText = job.State.ToString();
         _statusColor = GetStatusColor(job.State);
+
+        RefreshSegments();
+    }
+
+    public void RefreshSegments()
+    {
+        Segments.Clear();
+        foreach (var seg in Job.Segments)
+        {
+            Segments.Add(new SegmentDisplayModel(seg));
+        }
     }
 
     public void UpdateProgress(long currentBytes, double speedBytesPerSec)
@@ -67,6 +100,28 @@ public partial class DownloadItemViewModel : ViewModelBase
         {
             EtaText = "--";
         }
+
+        // Update segments if present
+        if (Job.Segments.Count > 0)
+        {
+            if (Segments.Count != Job.Segments.Count)
+            {
+                RefreshSegments();
+            }
+            else
+            {
+                for (int i = 0; i < Job.Segments.Count; i++)
+                {
+                    Segments[i].UpdateFromSegment(Job.Segments[i]);
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleDetails()
+    {
+        IsDetailsExpanded = !IsDetailsExpanded;
     }
 
     [RelayCommand]
