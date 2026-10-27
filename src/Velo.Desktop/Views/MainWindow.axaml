@@ -80,7 +80,7 @@
                 </MenuItem>
                 <MenuItem Header="File">
                     <MenuItem Header="Stop download" Command="{Binding StopSelectedCommand}" />
-                    <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Del" />
+                    <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
                 </MenuItem>
                 <MenuItem Header="Downloads">
                     <MenuItem Header="Resume All" Command="{Binding ResumeAllCommand}" />
