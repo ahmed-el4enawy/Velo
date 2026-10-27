@@ -148,6 +148,7 @@ public sealed class MultiSegmentEngine : IDownloadEngine
                 await _throttler.ThrottleAsync(bytesRead, cancellationToken);
             }
 
+            job.DownloadedBytes += bytesRead;
             byteProgress?.Report(bytesRead);
         }
 

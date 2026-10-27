@@ -88,6 +88,20 @@ public sealed class SegmentWorker
                     throw new HttpRequestException($"Server returned 416 Range Not Satisfiable for range {segment.NextByte}-{segment.EndByte}.", null, HttpStatusCode.RequestedRangeNotSatisfiable);
                 }
 
+                if ((int)response.StatusCode == 429 || response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    int delaySeconds = 2;
+                    if (response.Headers.RetryAfter?.Delta.HasValue == true)
+                    {
+                        delaySeconds = (int)Math.Clamp(response.Headers.RetryAfter.Delta.Value.TotalSeconds, 1, 60);
+                    }
+                    _logger?.LogWarning("Server returned {Status} with Retry-After: {Sec}s on segment {Index}", response.StatusCode, delaySeconds, segment.Index);
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+                    retryCount++;
+                    segment.Attempts++;
+                    continue;
+                }
+
                 if (response.StatusCode != HttpStatusCode.PartialContent)
                 {
                     response.EnsureSuccessStatusCode();
