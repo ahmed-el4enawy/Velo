@@ -93,15 +93,30 @@ public sealed class HttpProbe : IHttpProbe
 
                 if (rangeResponse.StatusCode == HttpStatusCode.PartialContent)
                 {
-                    rangeSupported = true;
-                    effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
-                    etag ??= rangeResponse.Headers.ETag?.Tag;
-                    lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
-                    contentDispositionFileName ??= ExtractFileNameFromDisposition(rangeResponse.Content.Headers.ContentDisposition);
-
-                    if (rangeResponse.Content.Headers.ContentRange?.HasLength == true)
+                    // Strict HTTP 206 validation: Verify Content-Range header
+                    var contentRange = rangeResponse.Content.Headers.ContentRange;
+                    if (contentRange != null && contentRange.Unit.Equals("bytes", StringComparison.OrdinalIgnoreCase))
                     {
-                        contentLength = rangeResponse.Content.Headers.ContentRange.Length;
+                        rangeSupported = true;
+                        effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                        etag ??= rangeResponse.Headers.ETag?.Tag;
+                        lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
+                        contentDispositionFileName ??= ExtractFileNameFromDisposition(rangeResponse.Content.Headers.ContentDisposition);
+
+                        if (contentRange.HasLength)
+                        {
+                            contentLength = contentRange.Length;
+                        }
+                    }
+                    else
+                    {
+                        // 206 returned without valid Content-Range header
+                        rangeSupported = false;
+                        effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                        contentLength ??= rangeResponse.Content.Headers.ContentLength;
+                        etag ??= rangeResponse.Headers.ETag?.Tag;
+                        lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
+                        contentDispositionFileName ??= ExtractFileNameFromDisposition(rangeResponse.Content.Headers.ContentDisposition);
                     }
                 }
                 else if (rangeResponse.IsSuccessStatusCode)
@@ -113,6 +128,18 @@ public sealed class HttpProbe : IHttpProbe
                     etag ??= rangeResponse.Headers.ETag?.Tag;
                     lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
                     contentDispositionFileName ??= ExtractFileNameFromDisposition(rangeResponse.Content.Headers.ContentDisposition);
+                }
+                else if (rangeResponse.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+                {
+                    // 416 Range Not Satisfiable
+                    rangeSupported = false;
+                    effectiveUrl = rangeResponse.RequestMessage?.RequestUri?.ToString() ?? effectiveUrl;
+                    etag ??= rangeResponse.Headers.ETag?.Tag;
+                    lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
+                    if (rangeResponse.Content.Headers.ContentRange?.HasLength == true)
+                    {
+                        contentLength = rangeResponse.Content.Headers.ContentRange.Length;
+                    }
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

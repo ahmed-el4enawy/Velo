@@ -15,12 +15,16 @@ public sealed class MultiSegmentEngine : IDownloadEngine
     private readonly ISpeedThrottler? _throttler;
     private readonly ILogger<MultiSegmentEngine>? _logger;
 
+    public int DefaultSegmentCount { get; set; } = 8;
+
     public MultiSegmentEngine(
         HttpClient? httpClient = null,
         IPartialFileManager? fileManager = null,
         ISpeedThrottler? throttler = null,
-        ILogger<MultiSegmentEngine>? logger = null)
+        ILogger<MultiSegmentEngine>? logger = null,
+        int defaultSegmentCount = 8)
     {
+        DefaultSegmentCount = Math.Clamp(defaultSegmentCount, 1, 32);
         _logger = logger;
         _throttler = throttler;
         _fileManager = fileManager ?? new PositionalFileManager();
@@ -53,14 +57,24 @@ public sealed class MultiSegmentEngine : IDownloadEngine
                 // Multi-threaded segmented download
                 if (job.Segments.Count == 0)
                 {
-                    job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, 4);
+                    job.Segments = SegmentPlanner.PlanSegments(job.Id, job.ExpectedBytes.Value, DefaultSegmentCount);
                 }
 
-                var worker = new SegmentWorker(_httpClient, _fileManager, _throttler);
-                var workerTasks = job.Segments.Select(segment =>
-                    worker.DownloadSegmentAsync(job, segment, byteProgress, cancellationToken));
+                try
+                {
+                    var worker = new SegmentWorker(_httpClient, _fileManager, _throttler, _logger != null ? LoggerFactory.Create(b => {}).CreateLogger<SegmentWorker>() : null);
+                    var workerTasks = job.Segments.Select(segment =>
+                        worker.DownloadSegmentAsync(job, segment, byteProgress, cancellationToken));
 
-                await Task.WhenAll(workerTasks);
+                    await Task.WhenAll(workerTasks);
+                }
+                catch (RangeNotSupportedException)
+                {
+                    _logger?.LogWarning("Remote server refused range request during download. Falling back to sequential streaming for job {Id}.", job.Id);
+                    job.RangeSupported = false;
+                    job.Segments.Clear();
+                    await ExecuteSequentialDownloadAsync(job, byteProgress, cancellationToken);
+                }
             }
             else
             {
@@ -114,6 +128,11 @@ public sealed class MultiSegmentEngine : IDownloadEngine
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
+        if (!job.ExpectedBytes.HasValue && response.Content.Headers.ContentLength.HasValue)
+        {
+            job.ExpectedBytes = response.Content.Headers.ContentLength.Value;
+        }
+
         using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var fileStream = new FileStream(job.TempPath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, true);
 
@@ -123,8 +142,15 @@ public sealed class MultiSegmentEngine : IDownloadEngine
         while ((bytesRead = await responseStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-            job.DownloadedBytes += bytesRead;
+
+            if (_throttler != null)
+            {
+                await _throttler.ThrottleAsync(bytesRead, cancellationToken);
+            }
+
             byteProgress?.Report(bytesRead);
         }
+
+        await fileStream.FlushAsync(cancellationToken);
     }
 }

@@ -6,6 +6,14 @@ using Velo.Domain;
 namespace Velo.DownloadEngine;
 
 /// <summary>
+/// Thrown when a remote server returns HTTP 200 OK or refuses byte range headers during segmented downloads.
+/// </summary>
+public sealed class RangeNotSupportedException : InvalidOperationException
+{
+    public RangeNotSupportedException(string message) : base(message) { }
+}
+
+/// <summary>
 /// Worker task responsible for streaming an individual byte-range chunk directly to disk
 /// using positional random-access I/O (PRD v2.0 Section 5.2 & FR-03).
 /// </summary>
@@ -66,12 +74,34 @@ public sealed class SegmentWorker
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     // Server refused range request and returned full 200 OK
-                    throw new InvalidOperationException("Server ignored Range request and returned 200 OK. Sequential fallback required.");
+                    throw new RangeNotSupportedException("Server ignored Range request and returned 200 OK. Sequential fallback required.");
+                }
+
+                if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+                {
+                    // 416: Check if we are already at or past the end
+                    if (segment.NextByte > segment.EndByte)
+                    {
+                        segment.State = SegmentState.Completed;
+                        return;
+                    }
+                    throw new HttpRequestException($"Server returned 416 Range Not Satisfiable for range {segment.NextByte}-{segment.EndByte}.", null, HttpStatusCode.RequestedRangeNotSatisfiable);
                 }
 
                 if (response.StatusCode != HttpStatusCode.PartialContent)
                 {
                     response.EnsureSuccessStatusCode();
+                }
+
+                // Strict validation of Content-Range: bytes START-END/TOTAL
+                var contentRange = response.Content.Headers.ContentRange;
+                if (contentRange != null && contentRange.From.HasValue)
+                {
+                    if (contentRange.From.Value != segment.NextByte)
+                    {
+                        throw new InvalidOperationException(
+                            $"Server returned mismatched range offset. Expected start at {segment.NextByte}, but got {contentRange.From.Value}.");
+                    }
                 }
 
                 using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -108,6 +138,11 @@ public sealed class SegmentWorker
                 // Chunk successfully finished
                 segment.State = SegmentState.Completed;
                 return;
+            }
+            catch (RangeNotSupportedException)
+            {
+                segment.State = SegmentState.Failed;
+                throw;
             }
             catch (Exception ex) when (ex is not OperationCanceledException && retryCount < MaxRetries)
             {
