@@ -11,6 +11,7 @@
         Width="580" Height="340"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
+        Topmost="True"
         Background="#0E1015"
         Foreground="#F1F5F9">
 

@@ -272,18 +272,12 @@ public partial class MainWindowViewModel : ViewModelBase
             });
         };
 
-        var dialog = new AddDownloadWindow(vm);
-        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        var dialog = new AddDownloadWindow(vm)
         {
-            if (desktop.MainWindow != null && desktop.MainWindow.IsVisible)
-            {
-                dialog.ShowDialog(desktop.MainWindow);
-            }
-            else
-            {
-                dialog.Show();
-            }
-        }
+            Topmost = true
+        };
+        dialog.Show();
+        dialog.Activate();
     }
 
     [RelayCommand]
@@ -293,8 +287,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (item == null) return;
 
         var progressVm = new DownloadProgressWindowViewModel(item);
-        var progressWindow = new Views.DownloadProgressWindow(progressVm);
+        var progressWindow = new Views.DownloadProgressWindow(progressVm)
+        {
+            Topmost = true
+        };
         progressWindow.Show();
+        progressWindow.Activate();
     }
 
     public void ExecuteDoubleClickAction(DownloadItemViewModel item)
