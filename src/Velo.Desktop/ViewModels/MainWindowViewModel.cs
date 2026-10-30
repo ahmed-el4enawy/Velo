@@ -26,6 +26,17 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _activeCategory = "All Downloads";
 
+    public bool IsCategoryAll => ActiveCategory == "All Downloads";
+    public bool IsCategoryCompressed => ActiveCategory == "Compressed";
+    public bool IsCategoryDocuments => ActiveCategory == "Documents";
+    public bool IsCategoryMusic => ActiveCategory == "Music";
+    public bool IsCategoryPrograms => ActiveCategory == "Programs";
+    public bool IsCategoryVideo => ActiveCategory == "Video";
+    public bool IsCategoryUnfinished => ActiveCategory == "Unfinished";
+    public bool IsCategoryFinished => ActiveCategory == "Finished";
+    public bool IsCategoryGrabber => ActiveCategory == "Grabber projects";
+    public bool IsCategoryQueues => ActiveCategory == "Queues";
+
     [ObservableProperty]
     private long _totalDownloadSpeedBytesPerSec;
 
@@ -171,6 +182,7 @@ public partial class MainWindowViewModel : ViewModelBase
         int streams = 0;
         int activeCount = 0;
         int completeCount = 0;
+        double totalSpeed = 0;
 
         foreach (var item in Downloads)
         {
@@ -178,6 +190,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 streams += item.SegmentsCount > 0 ? item.SegmentsCount : 1;
                 activeCount++;
+                totalSpeed += item.SpeedBytesPerSec;
             }
             else if (item.Job.State == JobState.Completed)
             {
@@ -186,11 +199,40 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         ActiveStreamsCount = streams;
+        TotalDownloadSpeedBytesPerSec = (long)totalSpeed;
+        TotalSpeedText = FormatSpeed(totalSpeed);
         StatusBarInfo = $"{Downloads.Count} downloads ({completeCount} complete, {activeCount} downloading)";
     }
 
+    private static string FormatSpeed(double bytesPerSec)
+    {
+        if (bytesPerSec <= 0) return "0.0 KB/s";
+        string[] sizes = ["B/s", "KB/s", "MB/s", "GB/s"];
+        double len = bytesPerSec;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+        return $"{len:0.#} {sizes[order]}";
+    }
+
     partial void OnSearchQueryChanged(string value) => ApplyFilter();
-    partial void OnActiveCategoryChanged(string value) => ApplyFilter();
+    partial void OnActiveCategoryChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsCategoryAll));
+        OnPropertyChanged(nameof(IsCategoryCompressed));
+        OnPropertyChanged(nameof(IsCategoryDocuments));
+        OnPropertyChanged(nameof(IsCategoryMusic));
+        OnPropertyChanged(nameof(IsCategoryPrograms));
+        OnPropertyChanged(nameof(IsCategoryVideo));
+        OnPropertyChanged(nameof(IsCategoryUnfinished));
+        OnPropertyChanged(nameof(IsCategoryFinished));
+        OnPropertyChanged(nameof(IsCategoryGrabber));
+        OnPropertyChanged(nameof(IsCategoryQueues));
+        ApplyFilter();
+    }
 
     [RelayCommand]
     private void SelectCategory(string category)

@@ -39,6 +39,9 @@ public partial class DownloadItemViewModel : ViewModelBase
     private string _speedText = "0 KB/s";
 
     [ObservableProperty]
+    private double _speedBytesPerSec;
+
+    [ObservableProperty]
     private string _etaText = "--";
 
     [ObservableProperty]
@@ -67,6 +70,8 @@ public partial class DownloadItemViewModel : ViewModelBase
     public bool CanRefreshAddress => Job.State != JobState.Completed;
     public bool CanAddToQueue => Job.State != JobState.Completed;
     public bool CanDeleteFromQueue => Job.State == JobState.Queued || !string.IsNullOrEmpty(QueueName);
+    public bool IsActiveDownloading => Job.State == JobState.Downloading;
+    public bool IsPaused => Job.State == JobState.Paused;
 
     public string OriginalUrl => Job.OriginalUrl;
     public string EffectiveUrl => Job.EffectiveUrl;
@@ -112,13 +117,13 @@ public partial class DownloadItemViewModel : ViewModelBase
     public string StatusDisplay => Job.State switch
     {
         JobState.Completed => "Complete",
-        JobState.Downloading => "Downloading",
-        JobState.Paused => "Paused",
+        JobState.Downloading => $"{ProgressPercentage:0.0}%",
+        JobState.Paused => $"Paused ({ProgressPercentage:0.0}%)",
         JobState.Queued => "Queued",
         JobState.Failed => "Error",
         JobState.Interrupted => "Interrupted",
         JobState.Canceled => "Canceled",
-        JobState.Verifying => "Verifying",
+        JobState.Verifying => "Verifying...",
         _ => Job.State.ToString()
     };
 
@@ -157,6 +162,7 @@ public partial class DownloadItemViewModel : ViewModelBase
 
         ProgressPercentage = Job.ProgressPercentage;
         SizeInfo = FormatSize(currentBytes, Job.ExpectedBytes);
+        SpeedBytesPerSec = speedBytesPerSec;
         SpeedText = FormatSpeed(speedBytesPerSec);
         StatusText = Job.State.ToString();
         StatusColor = GetStatusColor(Job.State);
@@ -204,6 +210,8 @@ public partial class DownloadItemViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanRefreshAddress));
         OnPropertyChanged(nameof(CanAddToQueue));
         OnPropertyChanged(nameof(CanDeleteFromQueue));
+        OnPropertyChanged(nameof(IsActiveDownloading));
+        OnPropertyChanged(nameof(IsPaused));
     }
 
     public static event Action<DownloadItemViewModel>? DetailsRequested;
