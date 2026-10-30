@@ -23,6 +23,11 @@ public partial class App : Avalonia.Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // Keep the app alive via the system tray icon even when no windows are visible.
+            // Without this, Avalonia's default (OnLastWindowClose) auto-shows the MainWindow
+            // or terminates the process when the popup dialog closes.
+            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+
             var mainVm = Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow
             {
@@ -72,7 +77,10 @@ public partial class App : Avalonia.Application
 
             if (startInBackground)
             {
-                // Start hidden in tray (do not show MainWindow), only show popup dialog for the URL
+                // Prevent MainWindow from ever appearing on screen or in the taskbar
+                desktop.MainWindow.ShowInTaskbar = false;
+                desktop.MainWindow.ShowActivated = false;
+
                 if (!string.IsNullOrWhiteSpace(initialUrl))
                 {
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
@@ -107,6 +115,8 @@ public partial class App : Avalonia.Application
     {
         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
         {
+            // Restore taskbar presence when user explicitly opens the main window
+            desktop.MainWindow.ShowInTaskbar = true;
             if (!desktop.MainWindow.IsVisible)
             {
                 desktop.MainWindow.Show();
