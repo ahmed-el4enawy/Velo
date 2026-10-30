@@ -20,9 +20,9 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="7,5" />
+            <Setter Property="Padding" Value="8,6" />
             <Setter Property="Margin" Value="2,0" />
-            <Setter Property="MinWidth" Value="62" />
+            <Setter Property="MinWidth" Value="64" />
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15" />
@@ -31,11 +31,11 @@
             </Setter>
         </Style>
         <Style Selector="Button.ribbonBtn:pointerover">
-            <Setter Property="Background" Value="#1E2028" />
-            <Setter Property="BorderBrush" Value="#3F3924" />
+            <Setter Property="Background" Value="#1C1F2B" />
+            <Setter Property="BorderBrush" Value="#453B21" />
         </Style>
         <Style Selector="Button.ribbonBtn:pressed">
-            <Setter Property="Background" Value="#29261E" />
+            <Setter Property="Background" Value="#2E2514" />
             <Setter Property="BorderBrush" Value="#F59E0B" />
         </Style>
 
@@ -58,6 +58,13 @@
         <Style Selector="Button.categoryBtn:pointerover">
             <Setter Property="Background" Value="#1A1C24" />
             <Setter Property="Foreground" Value="#F8FAFC" />
+        </Style>
+        <Style Selector="Button.categoryBtn.active">
+            <Setter Property="Background" Value="#221D0E" />
+            <Setter Property="Foreground" Value="#FBBF24" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderThickness" Value="2,0,0,0" />
+            <Setter Property="BorderBrush" Value="#F59E0B" />
         </Style>
 
         <!-- Dense Data Row ListBox Item Style with Gold Accent Selection -->
@@ -391,12 +398,27 @@
         </Border>
 
         <!-- 3. Bottom Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#0F1015" BorderBrush="#22242D" BorderThickness="0,1,0,0" Padding="12,5">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" Text="{Binding StatusBarInfo}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
-                    <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Active Streams: {0}/24'}" FontSize="11" Foreground="#94A3B8" />
-                    <TextBlock Text="{Binding TotalSpeedText, StringFormat='Aggregate Speed: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" />
+        <Border DockPanel.Dock="Bottom" Background="#0C0E13" BorderBrush="#1F222C" BorderThickness="0,1,0,0" Padding="14,6">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Width="7" Height="7" CornerRadius="3.5" Background="#10B981" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusBarInfo}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <Border Background="#181B24" BorderBrush="#262A37" BorderThickness="1" CornerRadius="4" Padding="8,2" IsVisible="{Binding IsSpeedLimiterEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="⚡" FontSize="10" Foreground="#F59E0B" VerticalAlignment="Center" />
+                            <TextBlock Text="Speed Limit: Active" FontSize="10" FontWeight="SemiBold" Foreground="#FBBF24" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{Binding ActiveStreamsCount, StringFormat='Active Streams: {0}/24'}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                    <Border Background="#201A09" BorderBrush="#3F3415" BorderThickness="1" CornerRadius="4" Padding="10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="⚡" FontSize="10" Foreground="#F59E0B" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TotalSpeedText, StringFormat='Throughput: {0}'}" FontSize="11" FontWeight="Bold" Foreground="#F59E0B" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -414,40 +436,40 @@
                     <ScrollViewer>
                         <StackPanel Spacing="1" Margin="4,4">
                             <!-- All Downloads -->
-                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="All Downloads" FontWeight="SemiBold">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryAll}" Command="{Binding SelectCategoryCommand}" CommandParameter="All Downloads" FontWeight="SemiBold">
                                 <TextBlock Text="📁 All Downloads" />
                             </Button>
 
                             <!-- Subcategories -->
-                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Compressed">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryCompressed}" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Compressed">
                                 <TextBlock Text="🗜️ Compressed" />
                             </Button>
-                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Documents">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryDocuments}" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Documents">
                                 <TextBlock Text="📄 Documents" />
                             </Button>
-                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Music">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryMusic}" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Music">
                                 <TextBlock Text="🎵 Music" />
                             </Button>
-                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Programs">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryPrograms}" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Programs">
                                 <TextBlock Text="💻 Programs" />
                             </Button>
-                            <Button Classes="categoryBtn" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Video">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryVideo}" Margin="14,0,0,0" Command="{Binding SelectCategoryCommand}" CommandParameter="Video">
                                 <TextBlock Text="🎬 Video" />
                             </Button>
 
                             <Separator Background="#232631" Margin="0,4" />
 
                             <!-- Status filters -->
-                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Unfinished">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryUnfinished}" Command="{Binding SelectCategoryCommand}" CommandParameter="Unfinished">
                                 <TextBlock Text="⏳ Unfinished" />
                             </Button>
-                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Finished">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryFinished}" Command="{Binding SelectCategoryCommand}" CommandParameter="Finished">
                                 <TextBlock Text="✅ Finished" />
                             </Button>
-                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Grabber projects">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryGrabber}" Command="{Binding SelectCategoryCommand}" CommandParameter="Grabber projects">
                                 <TextBlock Text="🌐 Grabber projects" />
                             </Button>
-                            <Button Classes="categoryBtn" Command="{Binding SelectCategoryCommand}" CommandParameter="Queues">
+                            <Button Classes="categoryBtn" Classes.active="{Binding IsCategoryQueues}" Command="{Binding SelectCategoryCommand}" CommandParameter="Queues">
                                 <TextBlock Text="📋 Queues" />
                             </Button>
                         </StackPanel>
@@ -601,9 +623,26 @@
                                         <TextBlock Text="{Binding FormattedSizeOnly}" FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                     </Border>
 
-                                    <!-- 3: Status -->
+                                    <!-- 3: Status with mini progress bar -->
                                     <Border Grid.Column="3" BorderBrush="#1C1E26" BorderThickness="0,0,1,0" Padding="8,2">
-                                        <TextBlock Text="{Binding StatusDisplay}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <Grid VerticalAlignment="Center">
+                                            <ProgressBar Minimum="0" Maximum="100"
+                                                         Value="{Binding ProgressPercentage}"
+                                                         Foreground="#3F2B07"
+                                                         Background="#161820"
+                                                         BorderThickness="0"
+                                                         CornerRadius="3"
+                                                         Height="18"
+                                                         Opacity="0.8"
+                                                         IsVisible="{Binding IsActiveDownloading}" />
+                                            <TextBlock Text="{Binding StatusDisplay}"
+                                                       FontSize="11"
+                                                       Foreground="{Binding StatusColor}"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Center"
+                                                       Margin="4,0" />
+                                        </Grid>
                                     </Border>
 
                                     <!-- 4: Time left -->
