@@ -72,10 +72,7 @@ public partial class App : Avalonia.Application
 
             if (startInBackground)
             {
-                // Start hidden in tray (no main window visible), only show popup dialog for the URL
-                desktop.MainWindow.Show();
-                desktop.MainWindow.Hide();
-
+                // Start hidden in tray (do not show MainWindow), only show popup dialog for the URL
                 if (!string.IsNullOrWhiteSpace(initialUrl))
                 {
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
