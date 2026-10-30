@@ -72,8 +72,7 @@ public partial class App : Avalonia.Application
 
             if (startInBackground)
             {
-                // Start hidden in tray, only show popup dialog for the URL
-                desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                // Start hidden in tray (no main window visible), only show popup dialog for the URL
                 desktop.MainWindow.Show();
                 desktop.MainWindow.Hide();
 
@@ -84,6 +83,7 @@ public partial class App : Avalonia.Application
             }
             else
             {
+                desktop.MainWindow.Show();
                 if (!string.IsNullOrWhiteSpace(initialUrl))
                 {
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));

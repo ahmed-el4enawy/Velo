@@ -59,7 +59,7 @@ internal sealed class Program
                 }
 
                 string messageToSend = string.IsNullOrWhiteSpace(urlToSend) ? "__ACTIVATE__" : urlToSend;
-                using var client = new System.IO.Pipes.NamedPipeClientStream(".", "Velo_NamedPipe_IPC", System.IO.Pipes.PipeDirection.InOut);
+                using var client = new System.IO.Pipes.NamedPipeClientStream(".", Velo.Desktop.Services.IpcServer.DefaultPipeName, System.IO.Pipes.PipeDirection.InOut);
                 client.Connect(1500);
                 using var writer = new System.IO.StreamWriter(client, System.Text.Encoding.UTF8, 1024, leaveOpen: true) { AutoFlush = true };
                 writer.WriteLine(messageToSend);
