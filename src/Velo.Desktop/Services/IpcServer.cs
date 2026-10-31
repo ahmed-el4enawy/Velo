@@ -13,8 +13,11 @@ public static class IpcServer
     public static string PipeName { get; set; } = DefaultPipeName;
     private static CancellationTokenSource? _cts;
 
+    private static NamedPipeServerStream? _currentServer;
+
     public static void StartListening(Func<string, string> onMessageReceived, string? customPipeName = null)
     {
+        Stop();
         PipeName = customPipeName ?? DefaultPipeName;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
@@ -33,6 +36,8 @@ public static class IpcServer
                         PipeTransmissionMode.Byte,
                         PipeOptions.Asynchronous);
 
+                    _currentServer = server;
+
                     await server.WaitForConnectionAsync(token);
                     using var reader = new StreamReader(server, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
                     using var writer = new StreamWriter(server, System.Text.Encoding.UTF8, bufferSize: 1024, leaveOpen: true) { AutoFlush = true };
@@ -50,15 +55,6 @@ public static class IpcServer
                         await writer.WriteLineAsync("ACK:EMPTY".AsMemory(), token);
                         await writer.FlushAsync(token);
                     }
-
-                    try
-                    {
-                        server.WaitForPipeDrain();
-                    }
-                    catch
-                    {
-                        // Ignore if client disconnected before drain
-                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -66,7 +62,12 @@ public static class IpcServer
                 }
                 catch
                 {
+                    if (token.IsCancellationRequested) break;
                     await Task.Delay(50, token);
+                }
+                finally
+                {
+                    _currentServer = null;
                 }
             }
         }, token);
@@ -75,5 +76,14 @@ public static class IpcServer
     public static void Stop()
     {
         _cts?.Cancel();
+        try
+        {
+            _currentServer?.Dispose();
+        }
+        catch
+        {
+            // Ignore disposal errors on shutdown
+        }
+        _currentServer = null;
     }
 }
