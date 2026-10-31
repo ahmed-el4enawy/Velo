@@ -65,7 +65,9 @@ public partial class DownloadProgressWindowViewModel : ViewModelBase
         JobState.Completed => "Complete",
         JobState.Paused => "Paused",
         JobState.Queued => "Queued",
-        JobState.Failed => "Error",
+        JobState.Failed => !string.IsNullOrWhiteSpace(Item.Job.FailureReason)
+            ? $"Error: {Item.Job.FailureReason}"
+            : "Error",
         _ => Item.Job.State.ToString()
     };
 

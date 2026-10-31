@@ -34,7 +34,8 @@ public static class Bootstrapper
         {
             AllowAutoRedirect = true,
             MaxAutomaticRedirections = 5,
-            EnableMultipleHttp2Connections = true
+            EnableMultipleHttp2Connections = true,
+            UseCookies = false
         })
         {
             Timeout = TimeSpan.FromMinutes(10)
