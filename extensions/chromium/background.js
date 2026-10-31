@@ -16,15 +16,33 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// Helper to get cookies formatted as header string for a given URL
+async function getCookieHeader(url) {
+  try {
+    if (!chrome.cookies) return "";
+    const cookies = await chrome.cookies.getAll({ url: url });
+    if (!cookies || cookies.length === 0) return "";
+    return cookies.map(c => `${c.name}=${c.value}`).join("; ");
+  } catch (err) {
+    console.debug("Could not retrieve cookies for URL:", url, err);
+    return "";
+  }
+}
+
 // Handle Context Menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "velo-download-link") {
     const targetUrl = info.linkUrl || info.srcUrl;
     if (targetUrl) {
+      const pageUrl = tab?.url || "";
+      const cookies = await getCookieHeader(targetUrl) || (pageUrl ? await getCookieHeader(pageUrl) : "");
       sendToVeloHost({
         action: "enqueue_download",
         url: targetUrl,
-        pageUrl: tab?.url || ""
+        pageUrl: pageUrl,
+        referrer: pageUrl,
+        cookies: cookies,
+        userAgent: navigator.userAgent
       });
     }
   }
@@ -90,12 +108,22 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
     console.debug("Could not pause native download:", pauseErr);
   }
 
+  // Retrieve active cookies for download URL or referrer tab
+  const referrer = downloadItem.referrer || "";
+  let cookies = await getCookieHeader(url);
+  if (!cookies && referrer) {
+    cookies = await getCookieHeader(referrer);
+  }
+
   // Pass to Velo Native Messaging Host and confirm acceptance before canceling
   sendToVeloHost({
     action: "enqueue_download",
     url: url,
     fileName: downloadItem.filename || "",
-    fileSize: downloadItem.fileSize || 0
+    fileSize: downloadItem.fileSize || 0,
+    referrer: referrer,
+    cookies: cookies,
+    userAgent: navigator.userAgent
   }, async (res) => {
     if (res && res.success && res.response && res.response.accepted) {
       // Velo confirmed acceptance: safely cancel and erase Chrome native download

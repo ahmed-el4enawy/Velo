@@ -71,6 +71,13 @@ internal static class Program
                 var root = doc.RootElement;
                 string action = root.TryGetProperty("action", out var act) ? act.GetString() ?? "" : "";
                 string url = root.TryGetProperty("url", out var u) ? u.GetString() ?? "" : "";
+                string cookies = root.TryGetProperty("cookies", out var c) ? c.GetString() ?? "" : "";
+                string referrer = root.TryGetProperty("referrer", out var r) ? r.GetString() ?? "" : "";
+                if (string.IsNullOrWhiteSpace(referrer) && root.TryGetProperty("pageUrl", out var pu))
+                {
+                    referrer = pu.GetString() ?? "";
+                }
+                string userAgent = root.TryGetProperty("userAgent", out var ua) ? ua.GetString() ?? "" : "";
 
                 if (action == "enqueue_download")
                 {
@@ -82,14 +89,25 @@ internal static class Program
                         (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
                     {
                         string safeUrl = uri.ToString();
-                        var (handedOff, reply) = await TrySendViaIpcAsync(safeUrl);
+                        
+                        // Construct structured IPC payload
+                        var payloadObj = new
+                        {
+                            url = safeUrl,
+                            cookies = !string.IsNullOrWhiteSpace(cookies) ? cookies : null,
+                            referrer = !string.IsNullOrWhiteSpace(referrer) ? referrer : null,
+                            userAgent = !string.IsNullOrWhiteSpace(userAgent) ? userAgent : null
+                        };
+                        string ipcMessage = JsonSerializer.Serialize(payloadObj);
+
+                        var (handedOff, reply) = await TrySendViaIpcAsync(ipcMessage);
                         if (handedOff && reply.StartsWith("ACK:ACCEPTED"))
                         {
                             responseObj = new { status = "accepted", accepted = true, url = safeUrl };
                         }
                         else
                         {
-                            bool launched = LaunchVeloDesktop(safeUrl);
+                            bool launched = LaunchVeloDesktop(safeUrl, cookies, referrer, userAgent);
                             if (launched)
                             {
                                 responseObj = new { status = "accepted", accepted = true, url = safeUrl, activated = true };
@@ -110,7 +128,7 @@ internal static class Program
                     var (handedOff, _) = await TrySendViaIpcAsync("__ACTIVATE__");
                     if (!handedOff)
                     {
-                        LaunchVeloDesktop(null);
+                        LaunchVeloDesktop(null, null, null, null);
                     }
                     responseObj = new { status = "opened", accepted = true };
                 }
@@ -156,7 +174,7 @@ internal static class Program
         }
     }
 
-    private static bool LaunchVeloDesktop(string? url)
+    private static bool LaunchVeloDesktop(string? url, string? cookies = null, string? referrer = null, string? userAgent = null)
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string veloExe = Path.Combine(baseDir, "Velo.exe");
@@ -188,11 +206,25 @@ internal static class Program
         {
             try
             {
-                string args = !string.IsNullOrWhiteSpace(url)
-                    ? $"--background --url \"{url}\""
-                    : "--background";
+                var sb = new System.Text.StringBuilder("--background");
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    sb.Append($" --url \"{url}\"");
+                }
+                if (!string.IsNullOrWhiteSpace(cookies))
+                {
+                    sb.Append($" --cookies \"{cookies.Replace("\"", "\\\"")}\"");
+                }
+                if (!string.IsNullOrWhiteSpace(referrer))
+                {
+                    sb.Append($" --referrer \"{referrer}\"");
+                }
+                if (!string.IsNullOrWhiteSpace(userAgent))
+                {
+                    sb.Append($" --user-agent \"{userAgent.Replace("\"", "\\\"")}\"");
+                }
 
-                var proc = Process.Start(new ProcessStartInfo(veloExe, args)
+                var proc = Process.Start(new ProcessStartInfo(veloExe, sb.ToString())
                 {
                     UseShellExecute = true,
                     WorkingDirectory = Path.GetDirectoryName(veloExe)
