@@ -62,7 +62,24 @@ public sealed class SegmentWorker
                 using var request = new HttpRequestMessage(HttpMethod.Get, job.EffectiveUrl);
                 request.Headers.Range = new RangeHeaderValue(segment.NextByte, segment.EndByte);
                 request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
-                request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Velo/1.0");
+                
+                string userAgent = !string.IsNullOrWhiteSpace(job.UserAgent) 
+                    ? job.UserAgent 
+                    : HttpProbe.DefaultUserAgent;
+                request.Headers.UserAgent.ParseAdd(userAgent);
+
+                if (!string.IsNullOrWhiteSpace(job.Cookies))
+                {
+                    request.Headers.TryAddWithoutValidation("Cookie", job.Cookies);
+                }
+
+                if (!string.IsNullOrWhiteSpace(job.Referrer) && Uri.TryCreate(job.Referrer, UriKind.Absolute, out var refUri))
+                {
+                    request.Headers.Referrer = refUri;
+                }
+
+                request.Headers.TryAddWithoutValidation("Accept", "*/*");
+                request.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9");
 
                 if (!string.IsNullOrWhiteSpace(job.StrongETag))
                 {

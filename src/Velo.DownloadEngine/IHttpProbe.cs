@@ -10,7 +10,13 @@ public sealed record ProbeResult(
     bool IsSuccess,
     string? ErrorMessage);
 
+public sealed record HttpRequestOptions(
+    string? Cookies = null,
+    string? Referrer = null,
+    string? UserAgent = null);
+
 public interface IHttpProbe
 {
     Task<ProbeResult> ProbeUrlAsync(string rawUrl, CancellationToken cancellationToken = default);
+    Task<ProbeResult> ProbeUrlAsync(string rawUrl, HttpRequestOptions? options, CancellationToken cancellationToken = default);
 }

@@ -11,6 +11,7 @@ namespace Velo.DownloadEngine;
 /// </summary>
 public sealed class HttpProbe : IHttpProbe
 {
+    public const string DefaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
     private readonly HttpClient _httpClient;
     private readonly ILogger<HttpProbe>? _logger;
 
@@ -20,17 +21,24 @@ public sealed class HttpProbe : IHttpProbe
         _httpClient = httpClient ?? new HttpClient(new SocketsHttpHandler
         {
             AllowAutoRedirect = true,
-            MaxAutomaticRedirections = 5,
+            MaxAutomaticRedirections = 8,
             AutomaticDecompression = DecompressionMethods.None // Enforce identity representation for byte mapping
         })
         {
-            Timeout = TimeSpan.FromSeconds(15)
+            Timeout = TimeSpan.FromSeconds(20)
         };
     }
 
-    public async Task<ProbeResult> ProbeUrlAsync(string rawUrl, CancellationToken cancellationToken = default)
+    public Task<ProbeResult> ProbeUrlAsync(string rawUrl, CancellationToken cancellationToken = default)
     {
-        if (!Uri.TryCreate(rawUrl, UriKind.Absolute, out var uri) || 
+        return ProbeUrlAsync(rawUrl, null, cancellationToken);
+    }
+
+    public async Task<ProbeResult> ProbeUrlAsync(string rawUrl, HttpRequestOptions? options, CancellationToken cancellationToken = default)
+    {
+        string normalizedUrl = NormalizeDownloadUrl(rawUrl);
+
+        if (!Uri.TryCreate(normalizedUrl, UriKind.Absolute, out var uri) || 
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
             return new ProbeResult(
@@ -51,47 +59,54 @@ public sealed class HttpProbe : IHttpProbe
         string? lastModified = null;
         bool rangeSupported = false;
 
-        // Step 1: Try HEAD request
-        try
+        string userAgent = !string.IsNullOrWhiteSpace(options?.UserAgent) ? options.UserAgent : DefaultUserAgent;
+
+        // Step 1: Try HEAD request (unless Google Drive direct link which often rejects HEAD or returns HTML without download stream)
+        bool isGoogleDrive = IsGoogleDriveUrl(uri);
+        bool headSucceeded = false;
+
+        if (!isGoogleDrive)
         {
-            using var headRequest = new HttpRequestMessage(HttpMethod.Head, uri);
-            headRequest.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
-            headRequest.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Velo/1.0");
-
-            using var headResponse = await _httpClient.SendAsync(headRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            
-            if (headResponse.IsSuccessStatusCode)
+            try
             {
-                var redirectedUri = headResponse.RequestMessage?.RequestUri;
-                if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
-                {
-                    effectiveUrl = redirectedUri.ToString();
-                }
-                contentLength = headResponse.Content.Headers.ContentLength;
-                etag = headResponse.Headers.ETag?.Tag;
-                lastModified = headResponse.Content.Headers.LastModified?.ToString("R");
-                contentDispositionFileName = ExtractFileNameFromDisposition(headResponse.Content.Headers.ContentDisposition);
+                using var headRequest = new HttpRequestMessage(HttpMethod.Head, uri);
+                ApplyHeaders(headRequest, userAgent, options?.Cookies, options?.Referrer);
 
-                if (headResponse.Headers.AcceptRanges.Contains("bytes"))
+                using var headResponse = await _httpClient.SendAsync(headRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                
+                if (headResponse.IsSuccessStatusCode)
                 {
-                    rangeSupported = true;
+                    var redirectedUri = headResponse.RequestMessage?.RequestUri;
+                    if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
+                    {
+                        effectiveUrl = redirectedUri.ToString();
+                    }
+                    contentLength = headResponse.Content.Headers.ContentLength;
+                    etag = headResponse.Headers.ETag?.Tag;
+                    lastModified = headResponse.Content.Headers.LastModified?.ToString("R");
+                    contentDispositionFileName = ExtractFileNameFromDisposition(headResponse.Content.Headers.ContentDisposition);
+
+                    if (headResponse.Headers.AcceptRanges.Contains("bytes"))
+                    {
+                        rangeSupported = true;
+                    }
+                    headSucceeded = true;
                 }
             }
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger?.LogDebug(ex, "HEAD request failed for {Url}. Falling back to GET Range probe.", rawUrl);
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger?.LogDebug(ex, "HEAD request failed for {Url}. Falling back to GET Range probe.", rawUrl);
+            }
         }
 
-        // Step 2: If range support is unconfirmed or HEAD returned non-success, issue GET Range: bytes=0-0
-        if (!rangeSupported || contentLength == null)
+        // Step 2: If HEAD was skipped, failed, or range support is unconfirmed, issue GET Range: bytes=0-0
+        if (!headSucceeded || !rangeSupported || contentLength == null)
         {
             try
             {
                 using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, effectiveUrl);
                 rangeRequest.Headers.Range = new RangeHeaderValue(0, 0);
-                rangeRequest.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
-                rangeRequest.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Velo/1.0");
+                ApplyHeaders(rangeRequest, userAgent, options?.Cookies, options?.Referrer);
 
                 using var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
@@ -118,7 +133,6 @@ public sealed class HttpProbe : IHttpProbe
                     }
                     else
                     {
-                        // 206 returned without valid Content-Range header
                         rangeSupported = false;
                         var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
                         if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
@@ -181,9 +195,18 @@ public sealed class HttpProbe : IHttpProbe
         }
 
         // Determine sanitized filename from disposition or URL path
-        string suggestedFileName = !string.IsNullOrWhiteSpace(contentDispositionFileName)
-            ? SafePathValidator.SanitizeFileName(contentDispositionFileName)
-            : SafePathValidator.SanitizeFileName(Path.GetFileName(new Uri(effectiveUrl).AbsolutePath));
+        string suggestedFileName;
+        if (!string.IsNullOrWhiteSpace(contentDispositionFileName))
+        {
+            suggestedFileName = SafePathValidator.SanitizeFileName(contentDispositionFileName);
+        }
+        else
+        {
+            string urlPathName = Path.GetFileName(new Uri(effectiveUrl).AbsolutePath);
+            suggestedFileName = !string.IsNullOrWhiteSpace(urlPathName) && !urlPathName.Contains('?') && urlPathName.Contains('.')
+                ? SafePathValidator.SanitizeFileName(urlPathName)
+                : "download.bin";
+        }
 
         return new ProbeResult(
             EffectiveUrl: effectiveUrl,
@@ -194,6 +217,89 @@ public sealed class HttpProbe : IHttpProbe
             RangeSupported: rangeSupported,
             IsSuccess: true,
             ErrorMessage: null);
+    }
+
+    public static string NormalizeDownloadUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return url;
+
+        // Auto-resolve Google Drive links:
+        // Case 1: https://drive.google.com/file/d/{id}/view... or /edit
+        // Case 2: https://drive.google.com/open?id={id}
+        // Case 3: https://drive.google.com/uc?id={id}
+        // Case 4: https://docs.google.com/uc?id={id}
+        try
+        {
+            if (url.Contains("drive.google.com", StringComparison.OrdinalIgnoreCase) ||
+                url.Contains("docs.google.com", StringComparison.OrdinalIgnoreCase))
+            {
+                string? fileId = null;
+
+                // Match /file/d/{fileId}
+                var fileDMatch = System.Text.RegularExpressions.Regex.Match(
+                    url,
+                    @"/file/d/([a-zA-Z0-9_-]+)",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (fileDMatch.Success)
+                {
+                    fileId = fileDMatch.Groups[1].Value;
+                }
+                else
+                {
+                    // Match ?id={fileId} or &id={fileId}
+                    var idQueryMatch = System.Text.RegularExpressions.Regex.Match(
+                        url,
+                        @"[?&]id=([a-zA-Z0-9_-]+)",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                    if (idQueryMatch.Success)
+                    {
+                        fileId = idQueryMatch.Groups[1].Value;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(fileId))
+                {
+                    // Convert to direct download export link with confirm=t (bypasses virus scan prompt for large files)
+                    return $"https://drive.usercontent.google.com/download?id={fileId}&export=download&confirm=t";
+                }
+            }
+        }
+        catch
+        {
+            // Fall back to original url if parsing fails
+        }
+
+        return url;
+    }
+
+    private static bool IsGoogleDriveUrl(Uri uri)
+    {
+        return uri.Host.EndsWith("google.com", StringComparison.OrdinalIgnoreCase) ||
+               uri.Host.EndsWith("googleusercontent.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void ApplyHeaders(HttpRequestMessage request, string userAgent, string? cookies, string? referrer)
+    {
+        request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
+        request.Headers.UserAgent.ParseAdd(userAgent);
+
+        if (!string.IsNullOrWhiteSpace(cookies))
+        {
+            request.Headers.TryAddWithoutValidation("Cookie", cookies);
+        }
+
+        if (!string.IsNullOrWhiteSpace(referrer) && Uri.TryCreate(referrer, UriKind.Absolute, out var refUri))
+        {
+            request.Headers.Referrer = refUri;
+        }
+
+        // Standard browser headers to prevent anti-bot rejection
+        request.Headers.TryAddWithoutValidation("Accept", "*/*");
+        request.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "navigate");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "document");
     }
 
     private static string? ExtractFileNameFromDisposition(ContentDispositionHeaderValue? disposition)

@@ -112,4 +112,44 @@ public class HttpProbeTests
         result.RangeSupported.Should().BeFalse("Server returned 200 OK instead of 206 Partial Content");
         result.ContentLength.Should().Be(1024);
     }
+
+    [Theory]
+    [InlineData("https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "https://drive.usercontent.google.com/download?id=1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms&export=download&confirm=t")]
+    [InlineData("https://drive.google.com/uc?id=12345ABCDE&export=download", "https://drive.usercontent.google.com/download?id=12345ABCDE&export=download&confirm=t")]
+    [InlineData("https://docs.google.com/uc?id=FILE_TEST_999", "https://drive.usercontent.google.com/download?id=FILE_TEST_999&export=download&confirm=t")]
+    public void NormalizeDownloadUrl_GoogleDriveLinks_ResolvesToDirectDownloadUrl(string rawUrl, string expectedUrl)
+    {
+        string normalized = HttpProbe.NormalizeDownloadUrl(rawUrl);
+        normalized.Should().Be(expectedUrl);
+    }
+
+    [Fact]
+    public async Task ProbeUrlAsync_WithOptions_PassesCookiesReferrerAndStandardUserAgent()
+    {
+        HttpRequestMessage? capturedRequest = null;
+        var mockHandler = new MockHttpMessageHandler(req =>
+        {
+            capturedRequest = req;
+            var res = new HttpResponseMessage(HttpStatusCode.OK);
+            res.Content = new ByteArrayContent([]);
+            res.Content.Headers.ContentLength = 2048;
+            return res;
+        });
+
+        var httpClient = new HttpClient(mockHandler);
+        var probe = new HttpProbe(httpClient);
+
+        var options = new Velo.DownloadEngine.HttpRequestOptions(
+            Cookies: "session_id=abcdef123456",
+            Referrer: "https://example.com/login",
+            UserAgent: "CustomAgent/2.0");
+
+        var result = await probe.ProbeUrlAsync("https://example.com/protected/file.zip", options);
+
+        result.IsSuccess.Should().BeTrue();
+        capturedRequest.Should().NotBeNull();
+        capturedRequest!.Headers.UserAgent.ToString().Should().Be("CustomAgent/2.0");
+        capturedRequest.Headers.GetValues("Cookie").Should().Contain("session_id=abcdef123456");
+        capturedRequest.Headers.Referrer.ToString().Should().Be("https://example.com/login");
+    }
 }
