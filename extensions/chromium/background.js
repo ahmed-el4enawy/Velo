@@ -16,11 +16,33 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Helper to get cookies formatted as header string for a given URL
+// Helper to get cookies formatted as header string for a given URL and its parent domains
 async function getCookieHeader(url) {
   try {
-    if (!chrome.cookies) return "";
-    const cookies = await chrome.cookies.getAll({ url: url });
+    if (!chrome.cookies || !url) return "";
+    
+    // 1. Direct query by URL
+    let cookies = await chrome.cookies.getAll({ url: url });
+    
+    // 2. Query by domain and parent domain if few cookies found (e.g. google.com for googleusercontent.com)
+    try {
+      const parsed = new URL(url);
+      const hostParts = parsed.hostname.split(".");
+      if (hostParts.length >= 2) {
+        const topDomain = hostParts.slice(-2).join(".");
+        const domainCookies = await chrome.cookies.getAll({ domain: topDomain });
+        const existingNames = new Set((cookies || []).map(c => c.name));
+        for (const dc of (domainCookies || [])) {
+          if (!existingNames.has(dc.name)) {
+            cookies.push(dc);
+            existingNames.add(dc.name);
+          }
+        }
+      }
+    } catch {
+      // Ignore domain parsing errors
+    }
+
     if (!cookies || cookies.length === 0) return "";
     return cookies.map(c => `${c.name}=${c.value}`).join("; ");
   } catch (err) {
@@ -109,8 +131,27 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
   }
 
   // Retrieve active cookies for download URL or referrer tab
-  const referrer = downloadItem.referrer || "";
+  let referrer = downloadItem.referrer || "";
   let cookies = await getCookieHeader(url);
+
+  // If cookies or referrer are missing, inspect the currently active browser tab
+  if (!cookies || !referrer) {
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const activeTab = tabs && tabs.length > 0 ? tabs[0] : null;
+      if (activeTab && activeTab.url) {
+        if (!referrer) {
+          referrer = activeTab.url;
+        }
+        if (!cookies) {
+          cookies = await getCookieHeader(activeTab.url);
+        }
+      }
+    } catch (tabErr) {
+      console.debug("Could not query active tab:", tabErr);
+    }
+  }
+
   if (!cookies && referrer) {
     cookies = await getCookieHeader(referrer);
   }
