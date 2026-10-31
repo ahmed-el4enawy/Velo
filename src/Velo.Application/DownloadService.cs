@@ -37,13 +37,26 @@ public sealed class DownloadService : IDownloadService
         _logger = logger;
     }
 
-    public async Task<DownloadJob> CreateDownloadAsync(
+    public Task<DownloadJob> CreateDownloadAsync(
         string url,
         string? customFileName = null,
         string? destinationFolder = null,
         CancellationToken cancellationToken = default)
     {
-        var probeResult = await _probe.ProbeUrlAsync(url, cancellationToken);
+        return CreateDownloadAsync(url, customFileName, destinationFolder, null, cancellationToken);
+    }
+
+    public async Task<DownloadJob> CreateDownloadAsync(
+        string url,
+        string? customFileName,
+        string? destinationFolder,
+        Velo.DownloadEngine.HttpRequestOptions? options,
+        CancellationToken cancellationToken = default)
+    {
+        var probeResult = options != null
+            ? await _probe.ProbeUrlAsync(url, options, cancellationToken)
+            : await _probe.ProbeUrlAsync(url, cancellationToken);
+
         if (!probeResult.IsSuccess)
         {
             throw new InvalidOperationException($"Unable to probe download URL: {probeResult.ErrorMessage}");
@@ -76,6 +89,9 @@ public sealed class DownloadService : IDownloadService
             LastModified = probeResult.LastModified,
             RangeSupported = probeResult.RangeSupported,
             Category = category,
+            Cookies = options?.Cookies,
+            Referrer = options?.Referrer,
+            UserAgent = options?.UserAgent,
             State = JobState.Created
         };
 

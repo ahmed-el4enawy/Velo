@@ -35,7 +35,19 @@ public class FakeDownloadService : IDownloadService
 
     public Task<DownloadJob> CreateDownloadAsync(string url, string? customFileName = null, string? destinationFolder = null, CancellationToken cancellationToken = default)
     {
-        var job = new DownloadJob { OriginalUrl = url, DisplayName = customFileName ?? "download.bin" };
+        return CreateDownloadAsync(url, customFileName, destinationFolder, null, cancellationToken);
+    }
+
+    public Task<DownloadJob> CreateDownloadAsync(string url, string? customFileName, string? destinationFolder, Velo.DownloadEngine.HttpRequestOptions? options, CancellationToken cancellationToken = default)
+    {
+        var job = new DownloadJob
+        {
+            OriginalUrl = url,
+            DisplayName = customFileName ?? "download.bin",
+            Cookies = options?.Cookies,
+            Referrer = options?.Referrer,
+            UserAgent = options?.UserAgent
+        };
         Jobs.Add(job);
         JobStateChanged?.Invoke(job);
         return Task.FromResult(job);

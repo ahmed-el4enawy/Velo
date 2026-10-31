@@ -241,11 +241,20 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void OpenAddDownloadDialog(string? initialUrl = null)
+    private void OpenAddDownloadDialog()
+    {
+        OpenAddDownloadDialog(null, null, null, null);
+    }
+
+    public void OpenAddDownloadDialog(string? initialUrl = null, string? cookies = null, string? referrer = null, string? userAgent = null)
     {
         if (_serviceProvider == null) return;
 
         var vm = _serviceProvider.GetRequiredService<AddDownloadWindowViewModel>();
+        if (!string.IsNullOrWhiteSpace(cookies)) vm.Cookies = cookies;
+        if (!string.IsNullOrWhiteSpace(referrer)) vm.Referrer = referrer;
+        if (!string.IsNullOrWhiteSpace(userAgent)) vm.UserAgent = userAgent;
+
         if (!string.IsNullOrWhiteSpace(initialUrl))
         {
             vm.Url = initialUrl;

@@ -56,6 +56,15 @@ public partial class AddDownloadWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canStart = true;
 
+    [ObservableProperty]
+    private string _cookies = string.Empty;
+
+    [ObservableProperty]
+    private string _referrer = string.Empty;
+
+    [ObservableProperty]
+    private string _userAgent = string.Empty;
+
     public ObservableCollection<string> Categories { get; } =
         ["Video", "Compressed", "Documents", "Music", "Programs", "General"];
 
@@ -115,7 +124,8 @@ public partial class AddDownloadWindowViewModel : ViewModelBase
 
         try
         {
-            var result = await _probe.ProbeUrlAsync(Url);
+            var options = BuildRequestOptions();
+            var result = await _probe.ProbeUrlAsync(Url, options);
             if (result.IsSuccess)
             {
                 string detectedName = result.ContentDispositionFileName ?? Path.GetFileName(new Uri(result.EffectiveUrl).AbsolutePath);
@@ -168,6 +178,19 @@ public partial class AddDownloadWindowViewModel : ViewModelBase
         }
     }
 
+    private Velo.DownloadEngine.HttpRequestOptions? BuildRequestOptions()
+    {
+        if (string.IsNullOrWhiteSpace(Cookies) && string.IsNullOrWhiteSpace(Referrer) && string.IsNullOrWhiteSpace(UserAgent))
+        {
+            return null;
+        }
+
+        return new Velo.DownloadEngine.HttpRequestOptions(
+            Cookies: !string.IsNullOrWhiteSpace(Cookies) ? Cookies : null,
+            Referrer: !string.IsNullOrWhiteSpace(Referrer) ? Referrer : null,
+            UserAgent: !string.IsNullOrWhiteSpace(UserAgent) ? UserAgent : null);
+    }
+
     private void CategorizeFile(string filename)
     {
         string ext = Path.GetExtension(filename).ToLowerInvariant();
@@ -208,7 +231,8 @@ public partial class AddDownloadWindowViewModel : ViewModelBase
 
         try
         {
-            var job = await _downloadService.CreateDownloadAsync(Url, FileName, DestinationFolder);
+            var options = BuildRequestOptions();
+            var job = await _downloadService.CreateDownloadAsync(Url, FileName, DestinationFolder, options);
             await _downloadService.StartDownloadAsync(job.Id);
             DownloadCreated?.Invoke(job);
             DownloadStarted?.Invoke(job);
@@ -227,7 +251,8 @@ public partial class AddDownloadWindowViewModel : ViewModelBase
 
         try
         {
-            var job = await _downloadService.CreateDownloadAsync(Url, FileName, DestinationFolder);
+            var options = BuildRequestOptions();
+            var job = await _downloadService.CreateDownloadAsync(Url, FileName, DestinationFolder, options);
             DownloadCreated?.Invoke(job);
         }
         catch (Exception ex)

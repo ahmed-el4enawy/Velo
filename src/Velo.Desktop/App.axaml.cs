@@ -43,13 +43,41 @@ public partial class App : Avalonia.Application
                     return "ACK:ACTIVATED";
                 }
 
-                if (Uri.TryCreate(message, UriKind.Absolute, out var validatedUri) &&
+                // Parse structured JSON payload or plain URL
+                string? url = null;
+                string? cookies = null;
+                string? referrer = null;
+                string? userAgent = null;
+
+                if (message.StartsWith("{") && message.EndsWith("}"))
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(message);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("url", out var u)) url = u.GetString();
+                        if (root.TryGetProperty("cookies", out var c)) cookies = c.GetString();
+                        if (root.TryGetProperty("referrer", out var r)) referrer = r.GetString();
+                        if (root.TryGetProperty("userAgent", out var ua)) userAgent = ua.GetString();
+                    }
+                    catch
+                    {
+                        url = null;
+                    }
+                }
+                else
+                {
+                    url = message;
+                }
+
+                if (!string.IsNullOrWhiteSpace(url) &&
+                    Uri.TryCreate(url, UriKind.Absolute, out var validatedUri) &&
                     (validatedUri.Scheme == Uri.UriSchemeHttp || validatedUri.Scheme == Uri.UriSchemeHttps))
                 {
                     string safeUrl = validatedUri.ToString();
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        mainVm.OpenAddDownloadDialog(safeUrl);
+                        mainVm.OpenAddDownloadDialog(safeUrl, cookies, referrer, userAgent);
                     });
                     return "ACK:ACCEPTED";
                 }
@@ -59,6 +87,9 @@ public partial class App : Avalonia.Application
 
             bool startInBackground = false;
             string? initialUrl = null;
+            string? initialCookies = null;
+            string? initialReferrer = null;
+            string? initialUserAgent = null;
 
             if (desktop.Args != null && desktop.Args.Length > 0)
             {
@@ -72,6 +103,18 @@ public partial class App : Avalonia.Application
                     {
                         initialUrl = desktop.Args[i + 1];
                     }
+                    else if (desktop.Args[i] == "--cookies" && i + 1 < desktop.Args.Length)
+                    {
+                        initialCookies = desktop.Args[i + 1];
+                    }
+                    else if (desktop.Args[i] == "--referrer" && i + 1 < desktop.Args.Length)
+                    {
+                        initialReferrer = desktop.Args[i + 1];
+                    }
+                    else if (desktop.Args[i] == "--user-agent" && i + 1 < desktop.Args.Length)
+                    {
+                        initialUserAgent = desktop.Args[i + 1];
+                    }
                 }
             }
 
@@ -83,7 +126,7 @@ public partial class App : Avalonia.Application
 
                 if (!string.IsNullOrWhiteSpace(initialUrl))
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl, initialCookies, initialReferrer, initialUserAgent));
                 }
             }
             else
@@ -91,7 +134,7 @@ public partial class App : Avalonia.Application
                 desktop.MainWindow.Show();
                 if (!string.IsNullOrWhiteSpace(initialUrl))
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl));
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => mainVm.OpenAddDownloadDialog(initialUrl, initialCookies, initialReferrer, initialUserAgent));
                 }
             }
 

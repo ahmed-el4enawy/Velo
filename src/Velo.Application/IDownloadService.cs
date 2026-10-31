@@ -8,6 +8,7 @@ public interface IDownloadService
     event Action<DownloadJob>? JobStateChanged;
 
     Task<DownloadJob> CreateDownloadAsync(string url, string? customFileName = null, string? destinationFolder = null, CancellationToken cancellationToken = default);
+    Task<DownloadJob> CreateDownloadAsync(string url, string? customFileName, string? destinationFolder, Velo.DownloadEngine.HttpRequestOptions? options, CancellationToken cancellationToken = default);
     Task StartDownloadAsync(Guid downloadId, CancellationToken cancellationToken = default);
     Task PauseDownloadAsync(Guid downloadId, CancellationToken cancellationToken = default);
     Task ResumeDownloadAsync(Guid downloadId, CancellationToken cancellationToken = default);
