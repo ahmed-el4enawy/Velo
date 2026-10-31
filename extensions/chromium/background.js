@@ -21,35 +21,55 @@ async function getCookieHeader(url) {
   try {
     if (!chrome.cookies || !url) return "";
     
+    const cookieMap = new Map();
+
+    const addCookies = (list) => {
+      if (!list) return;
+      for (const c of list) {
+        if (c && c.name && !cookieMap.has(c.name)) {
+          cookieMap.set(c.name, c.value);
+        }
+      }
+    };
+
     // 1. Direct query by URL
-    let cookies = await chrome.cookies.getAll({ url: url });
-    
-    // 2. Query by domain and parent domain if few cookies found (e.g. google.com for googleusercontent.com)
+    try {
+      const urlCookies = await chrome.cookies.getAll({ url: url });
+      addCookies(urlCookies);
+    } catch {}
+
+    // 2. Query domain hierarchy (e.g. googleusercontent.com and google.com)
     try {
       const parsed = new URL(url);
       const hostParts = parsed.hostname.split(".");
+      
+      // If host is on googleusercontent or google, ensure google.com cookies are included
+      if (parsed.hostname.endsWith("googleusercontent.com") || parsed.hostname.endsWith("google.com")) {
+        const gCookies = await chrome.cookies.getAll({ domain: ".google.com" });
+        addCookies(gCookies);
+        const gCookiesNoDot = await chrome.cookies.getAll({ domain: "google.com" });
+        addCookies(gCookiesNoDot);
+      }
+
       if (hostParts.length >= 2) {
         const topDomain = hostParts.slice(-2).join(".");
         const domainCookies = await chrome.cookies.getAll({ domain: topDomain });
-        const existingNames = new Set((cookies || []).map(c => c.name));
-        for (const dc of (domainCookies || [])) {
-          if (!existingNames.has(dc.name)) {
-            cookies.push(dc);
-            existingNames.add(dc.name);
-          }
-        }
+        addCookies(domainCookies);
+        const domainCookiesDot = await chrome.cookies.getAll({ domain: "." + topDomain });
+        addCookies(domainCookiesDot);
       }
     } catch {
       // Ignore domain parsing errors
     }
 
-    if (!cookies || cookies.length === 0) return "";
-    return cookies.map(c => `${c.name}=${c.value}`).join("; ");
+    if (cookieMap.size === 0) return "";
+    return Array.from(cookieMap.entries()).map(([k, v]) => `${k}=${v}`).join("; ");
   } catch (err) {
     console.debug("Could not retrieve cookies for URL:", url, err);
     return "";
   }
 }
+
 
 // Handle Context Menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
