@@ -71,6 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ObservableCollection<DownloadItemViewModel> Downloads { get; } = [];
     public ObservableCollection<DownloadItemViewModel> FilteredDownloads { get; } = [];
+    public ObservableCollection<DownloadItemViewModel> SelectedDownloads { get; } = [];
 
     public MainWindowViewModel(IDownloadService downloadService, IServiceProvider serviceProvider)
     {
@@ -94,6 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         Downloads.Remove(item);
+                        SelectedDownloads.Remove(item);
                         ApplyFilter();
                         SelectedDownload = FilteredDownloads.FirstOrDefault();
                     });
@@ -353,11 +355,32 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public void SelectAll()
+    {
+        SelectedDownloads.Clear();
+        foreach (var item in FilteredDownloads)
+        {
+            SelectedDownloads.Add(item);
+        }
+        if (SelectedDownloads.Count > 0)
+        {
+            SelectedDownload = SelectedDownloads[0];
+        }
+    }
+
+    [RelayCommand]
     private async Task ResumeSelectedAsync()
     {
-        if (SelectedDownload != null)
+        var targets = SelectedDownloads.Count > 0
+            ? SelectedDownloads.ToList()
+            : (SelectedDownload != null ? [SelectedDownload] : new List<DownloadItemViewModel>());
+
+        if (targets.Count > 0)
         {
-            await SelectedDownload.ResumeCommand.ExecuteAsync(null);
+            foreach (var item in targets)
+            {
+                await item.ResumeCommand.ExecuteAsync(null);
+            }
         }
         else
         {
@@ -368,9 +391,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task StopSelectedAsync()
     {
-        if (SelectedDownload != null)
+        var targets = SelectedDownloads.Count > 0
+            ? SelectedDownloads.ToList()
+            : (SelectedDownload != null ? [SelectedDownload] : new List<DownloadItemViewModel>());
+
+        if (targets.Count > 0)
         {
-            await SelectedDownload.PauseCommand.ExecuteAsync(null);
+            foreach (var item in targets)
+            {
+                await item.PauseCommand.ExecuteAsync(null);
+            }
         }
         else
         {
@@ -401,9 +431,42 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteSelectedAsync()
     {
-        if (SelectedDownload != null)
+        var targets = SelectedDownloads.Count > 0
+            ? SelectedDownloads.ToList()
+            : (SelectedDownload != null ? [SelectedDownload] : new List<DownloadItemViewModel>());
+
+        if (targets.Count == 1)
         {
-            SelectedDownload.RemoveCommand.Execute(null);
+            targets[0].RemoveCommand.Execute(null);
+            return;
+        }
+
+        if (targets.Count > 1)
+        {
+            var window = new RemoveDownloadWindow(targets, async deleteFiles =>
+            {
+                if (_downloadService != null)
+                {
+                    foreach (var item in targets)
+                    {
+                        await _downloadService.DeleteDownloadAsync(item.Job.Id, deleteFiles: deleteFiles);
+                        Downloads.Remove(item);
+                        SelectedDownloads.Remove(item);
+                    }
+                    ApplyFilter();
+                    SelectedDownload = FilteredDownloads.FirstOrDefault();
+                }
+            });
+
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow != null)
+            {
+                await window.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                window.Show();
+            }
             return;
         }
 
@@ -423,6 +486,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             await _downloadService.DeleteDownloadAsync(item.Job.Id, deleteFiles: false);
             Downloads.Remove(item);
+            SelectedDownloads.Remove(item);
         }
         ApplyFilter();
         SelectedDownload = FilteredDownloads.FirstOrDefault();

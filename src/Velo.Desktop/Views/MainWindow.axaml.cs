@@ -51,6 +51,26 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnListBoxKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.A && (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta)))
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.SelectAll();
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Delete)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.DeleteSelectedCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+    }
+
     private void OnListBoxPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var point = e.GetCurrentPoint(sender as Visual);
@@ -61,7 +81,13 @@ public partial class MainWindow : Window
                 var listBoxItem = visual.FindAncestorOfType<ListBoxItem>();
                 if (listBoxItem?.DataContext is DownloadItemViewModel item && DataContext is MainWindowViewModel vm)
                 {
-                    vm.SelectedDownload = item;
+                    // If the clicked item is already part of the multi-selection, preserve the selection
+                    if (!vm.SelectedDownloads.Contains(item))
+                    {
+                        vm.SelectedDownloads.Clear();
+                        vm.SelectedDownloads.Add(item);
+                        vm.SelectedDownload = item;
+                    }
                 }
             }
         }

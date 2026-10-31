@@ -154,6 +154,8 @@
 
                 <!-- 2. File Menu -->
                 <MenuItem Header="_File">
+                    <MenuItem Header="Select All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A" />
+                    <Separator />
                     <MenuItem Header="Stop Download" Command="{Binding StopSelectedCommand}" />
                     <MenuItem Header="Remove" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
                     <MenuItem Header="Download Now" Command="{Binding ResumeSelectedCommand}" />
@@ -545,12 +547,16 @@
                     </Border>
 
                     <!-- Table Data Rows -->
-                    <ListBox ItemsSource="{Binding FilteredDownloads}"
+                    <ListBox x:Name="DownloadsListBox"
+                             ItemsSource="{Binding FilteredDownloads}"
                              SelectedItem="{Binding SelectedDownload}"
+                             SelectionMode="Multiple"
+                             SelectedItems="{Binding SelectedDownloads}"
                              Background="Transparent"
                              BorderThickness="0"
                              DoubleTapped="OnRowDoubleTapped"
                              PointerPressed="OnListBoxPointerPressed"
+                             KeyDown="OnListBoxKeyDown"
                              IsVisible="{Binding HasFilteredDownloads}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:DownloadItemViewModel">
