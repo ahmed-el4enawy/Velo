@@ -258,7 +258,6 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(initialUrl))
         {
             vm.Url = initialUrl;
-            _ = vm.InspectUrlCommand.ExecuteAsync(null);
         }
 
         vm.DownloadCreated += job =>

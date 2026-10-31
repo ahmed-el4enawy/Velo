@@ -172,6 +172,48 @@ public sealed class HttpProbe : IHttpProbe
                     string? mediaType = rangeResponse.Content.Headers.ContentType?.MediaType;
                     if (string.Equals(mediaType, "text/html", StringComparison.OrdinalIgnoreCase))
                     {
+                        // Check if this is a Google Drive virus scan warning page with a confirmation form
+                        if (effectiveUrl.Contains("drive.usercontent.google.com", StringComparison.OrdinalIgnoreCase) ||
+                            effectiveUrl.Contains("drive.google.com", StringComparison.OrdinalIgnoreCase) ||
+                            effectiveUrl.Contains("docs.google.com", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string htmlBody = await rangeResponse.Content.ReadAsStringAsync(cancellationToken);
+                            
+                            // Check for confirmation link / form action / token
+                            // E.g.: <form id="download-form" action="https://drive.usercontent.google.com/download" ...>
+                            // or <a id="uc-download-link" href="https://drive.usercontent.google.com/download?...">
+                            // or hidden input name="confirm" value="..." and name="uuid" value="..."
+                            var actionMatch = System.Text.RegularExpressions.Regex.Match(htmlBody, @"action=""([^""]+)""");
+                            var confirmMatch = System.Text.RegularExpressions.Regex.Match(htmlBody, @"name=""confirm""\s+value=""([^""]+)""");
+                            var uuidMatch = System.Text.RegularExpressions.Regex.Match(htmlBody, @"name=""uuid""\s+value=""([^""]+)""");
+                            var idMatch = System.Text.RegularExpressions.Regex.Match(htmlBody, @"name=""id""\s+value=""([^""]+)""");
+                            var ucLinkMatch = System.Text.RegularExpressions.Regex.Match(htmlBody, @"id=""uc-download-link""\s+href=""([^""]+)""");
+
+                            string? bypassUrl = null;
+                            if (ucLinkMatch.Success)
+                            {
+                                bypassUrl = System.Net.WebUtility.HtmlDecode(ucLinkMatch.Groups[1].Value);
+                            }
+                            else if (actionMatch.Success && confirmMatch.Success)
+                            {
+                                string action = System.Net.WebUtility.HtmlDecode(actionMatch.Groups[1].Value);
+                                string confirm = confirmMatch.Groups[1].Value;
+                                string uuid = uuidMatch.Success ? $"&uuid={uuidMatch.Groups[1].Value}" : "";
+                                string id = idMatch.Success ? $"&id={idMatch.Groups[1].Value}" : "";
+                                string sep = action.Contains('?') ? "&" : "?";
+                                bypassUrl = $"{action}{sep}confirm={confirm}{uuid}{id}";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(bypassUrl))
+                            {
+                                if (Uri.TryCreate(new Uri(effectiveUrl), bypassUrl, out var fullBypassUri))
+                                {
+                                    // Recursive probe with the confirmation bypass URL
+                                    return await ProbeUrlAsync(fullBypassUri.ToString(), options, cancellationToken);
+                                }
+                            }
+                        }
+
                         return new ProbeResult(
                             EffectiveUrl: effectiveUrl,
                             ContentLength: null,
