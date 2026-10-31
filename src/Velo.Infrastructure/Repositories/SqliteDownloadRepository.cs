@@ -29,11 +29,11 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
                 INSERT INTO downloads (
                     id, original_url, effective_url, target_path, temp_path, display_name, host,
                     expected_bytes, downloaded_bytes, strong_etag, last_modified, range_supported,
-                    state, priority, category, failure_code, failure_reason, created_at, updated_at, finished_at
+                    state, priority, category, cookies, referrer, user_agent, failure_code, failure_reason, created_at, updated_at, finished_at
                 ) VALUES (
                     @id, @original_url, @effective_url, @target_path, @temp_path, @display_name, @host,
                     @expected_bytes, @downloaded_bytes, @strong_etag, @last_modified, @range_supported,
-                    @state, @priority, @category, @failure_code, @failure_reason, @created_at, @updated_at, @finished_at
+                    @state, @priority, @category, @cookies, @referrer, @user_agent, @failure_code, @failure_reason, @created_at, @updated_at, @finished_at
                 );";
 
             cmd.Parameters.AddWithValue("@id", job.Id.ToString());
@@ -51,6 +51,9 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             cmd.Parameters.AddWithValue("@state", (int)job.State);
             cmd.Parameters.AddWithValue("@priority", (int)job.Priority);
             cmd.Parameters.AddWithValue("@category", (int)job.Category);
+            cmd.Parameters.AddWithValue("@cookies", (object?)job.Cookies ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@referrer", (object?)job.Referrer ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@user_agent", (object?)job.UserAgent ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@created_at", job.CreatedAt.ToString("O"));
@@ -112,6 +115,9 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
                     state = @state,
                     priority = @priority,
                     category = @category,
+                    cookies = @cookies,
+                    referrer = @referrer,
+                    user_agent = @user_agent,
                     failure_code = @failure_code,
                     failure_reason = @failure_reason,
                     updated_at = @updated_at,
@@ -133,6 +139,9 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             cmd.Parameters.AddWithValue("@state", (int)job.State);
             cmd.Parameters.AddWithValue("@priority", (int)job.Priority);
             cmd.Parameters.AddWithValue("@category", (int)job.Category);
+            cmd.Parameters.AddWithValue("@cookies", (object?)job.Cookies ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@referrer", (object?)job.Referrer ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@user_agent", (object?)job.UserAgent ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_code", (object?)job.FailureCode ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@failure_reason", (object?)job.FailureReason ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@updated_at", DateTimeOffset.UtcNow.ToString("O"));
@@ -322,12 +331,27 @@ public sealed class SqliteDownloadRepository : IDownloadRepository
             State = (JobState)r.GetInt32(r.GetOrdinal("state")),
             Priority = (JobPriority)r.GetInt32(r.GetOrdinal("priority")),
             Category = (CategoryType)(r.IsDBNull(r.GetOrdinal("category")) ? 0 : r.GetInt32(r.GetOrdinal("category"))),
+            Cookies = HasColumn(r, "cookies") && !r.IsDBNull(r.GetOrdinal("cookies")) ? r.GetString(r.GetOrdinal("cookies")) : null,
+            Referrer = HasColumn(r, "referrer") && !r.IsDBNull(r.GetOrdinal("referrer")) ? r.GetString(r.GetOrdinal("referrer")) : null,
+            UserAgent = HasColumn(r, "user_agent") && !r.IsDBNull(r.GetOrdinal("user_agent")) ? r.GetString(r.GetOrdinal("user_agent")) : null,
             FailureCode = r.IsDBNull(r.GetOrdinal("failure_code")) ? null : r.GetString(r.GetOrdinal("failure_code")),
             FailureReason = r.IsDBNull(r.GetOrdinal("failure_reason")) ? null : r.GetString(r.GetOrdinal("failure_reason")),
             CreatedAt = DateTimeOffset.Parse(r.GetString(r.GetOrdinal("created_at")), CultureInfo.InvariantCulture),
             UpdatedAt = DateTimeOffset.Parse(r.GetString(r.GetOrdinal("updated_at")), CultureInfo.InvariantCulture),
             FinishedAt = r.IsDBNull(r.GetOrdinal("finished_at")) ? null : DateTimeOffset.Parse(r.GetString(r.GetOrdinal("finished_at")), CultureInfo.InvariantCulture)
         };
+    }
+
+    private static bool HasColumn(SqliteDataReader reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static DownloadSegment MapDownloadSegment(SqliteDataReader r)

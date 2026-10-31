@@ -26,6 +26,10 @@ public sealed class DownloadJob
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? FinishedAt { get; set; }
     
+    public string? Cookies { get; set; }
+    public string? Referrer { get; set; }
+    public string? UserAgent { get; set; }
+    
     public List<DownloadSegment> Segments { get; set; } = [];
 
     public double ProgressPercentage =>

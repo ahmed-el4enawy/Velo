@@ -33,6 +33,9 @@ public static class SqliteDatabaseInitializer
                 state INTEGER NOT NULL DEFAULT 0,
                 priority INTEGER NOT NULL DEFAULT 1,
                 category INTEGER NOT NULL DEFAULT 0,
+                cookies TEXT,
+                referrer TEXT,
+                user_agent TEXT,
                 failure_code TEXT,
                 failure_reason TEXT,
                 created_at TEXT NOT NULL,
@@ -71,26 +74,43 @@ public static class SqliteDatabaseInitializer
         ";
         command.ExecuteNonQuery();
 
-        // Safe idempotent migration: Check if 'category' column exists in 'downloads' table
-        using var pragmaCmd = connection.CreateCommand();
-        pragmaCmd.CommandText = "PRAGMA table_info(downloads);";
-        bool hasCategory = false;
-        using (var reader = pragmaCmd.ExecuteReader())
+        // Safe idempotent migrations: Check existing columns in 'downloads' table
+        var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var pragmaCmd = connection.CreateCommand())
         {
+            pragmaCmd.CommandText = "PRAGMA table_info(downloads);";
+            using var reader = pragmaCmd.ExecuteReader();
             while (reader.Read())
             {
-                if (string.Equals(reader.GetString(1), "category", StringComparison.OrdinalIgnoreCase))
-                {
-                    hasCategory = true;
-                    break;
-                }
+                existingColumns.Add(reader.GetString(1));
             }
         }
 
-        if (!hasCategory)
+        if (!existingColumns.Contains("category"))
         {
             using var alterCmd = connection.CreateCommand();
             alterCmd.CommandText = "ALTER TABLE downloads ADD COLUMN category INTEGER NOT NULL DEFAULT 0;";
+            alterCmd.ExecuteNonQuery();
+        }
+
+        if (!existingColumns.Contains("cookies"))
+        {
+            using var alterCmd = connection.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE downloads ADD COLUMN cookies TEXT;";
+            alterCmd.ExecuteNonQuery();
+        }
+
+        if (!existingColumns.Contains("referrer"))
+        {
+            using var alterCmd = connection.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE downloads ADD COLUMN referrer TEXT;";
+            alterCmd.ExecuteNonQuery();
+        }
+
+        if (!existingColumns.Contains("user_agent"))
+        {
+            using var alterCmd = connection.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE downloads ADD COLUMN user_agent TEXT;";
             alterCmd.ExecuteNonQuery();
         }
     }
