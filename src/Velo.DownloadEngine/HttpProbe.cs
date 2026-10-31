@@ -22,7 +22,8 @@ public sealed class HttpProbe : IHttpProbe
         {
             AllowAutoRedirect = true,
             MaxAutomaticRedirections = 8,
-            AutomaticDecompression = DecompressionMethods.None // Enforce identity representation for byte mapping
+            AutomaticDecompression = DecompressionMethods.None, // Enforce identity representation for byte mapping
+            UseCookies = false // Prevent .NET CookieContainer from stripping our manual Cookie request headers
         })
         {
             Timeout = TimeSpan.FromSeconds(20)
@@ -147,13 +148,43 @@ public sealed class HttpProbe : IHttpProbe
                 }
                 else if (rangeResponse.IsSuccessStatusCode)
                 {
-                    // Server returned 200 OK to a range request (ranges ignored, fallback to sequential)
-                    rangeSupported = false;
                     var redirectedUri = rangeResponse.RequestMessage?.RequestUri;
                     if (redirectedUri != null && (redirectedUri.Scheme == Uri.UriSchemeHttp || redirectedUri.Scheme == Uri.UriSchemeHttps))
                     {
                         effectiveUrl = redirectedUri.ToString();
                     }
+
+                    // Check if server redirected to Google Sign-in page
+                    if (effectiveUrl.Contains("accounts.google.com", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new ProbeResult(
+                            EffectiveUrl: effectiveUrl,
+                            ContentLength: null,
+                            ContentDispositionFileName: null,
+                            ETag: null,
+                            LastModified: null,
+                            RangeSupported: false,
+                            IsSuccess: false,
+                            ErrorMessage: "Download requires Google authentication. Please ensure the extension is reloaded with cookies permission.");
+                    }
+
+                    // Check if server returned an HTML webpage rather than a file stream
+                    string? mediaType = rangeResponse.Content.Headers.ContentType?.MediaType;
+                    if (string.Equals(mediaType, "text/html", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new ProbeResult(
+                            EffectiveUrl: effectiveUrl,
+                            ContentLength: null,
+                            ContentDispositionFileName: null,
+                            ETag: null,
+                            LastModified: null,
+                            RangeSupported: false,
+                            IsSuccess: false,
+                            ErrorMessage: "Server returned a web page (HTML) instead of a file download. Authentication or link confirmation required.");
+                    }
+
+                    // Server returned 200 OK to a range request (ranges ignored, fallback to sequential)
+                    rangeSupported = false;
                     contentLength ??= rangeResponse.Content.Headers.ContentLength;
                     etag ??= rangeResponse.Headers.ETag?.Tag;
                     lastModified ??= rangeResponse.Content.Headers.LastModified?.ToString("R");
@@ -230,6 +261,24 @@ public sealed class HttpProbe : IHttpProbe
         // Case 4: https://docs.google.com/uc?id={id}
         try
         {
+            // If the URL was redirected to accounts.google.com signin page with a ?continue=... target, unwrap it
+            if (url.Contains("accounts.google.com", StringComparison.OrdinalIgnoreCase))
+            {
+                var continueMatch = System.Text.RegularExpressions.Regex.Match(
+                    url,
+                    @"[?&]continue=([^&]+)",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (continueMatch.Success)
+                {
+                    string unescaped = Uri.UnescapeDataString(continueMatch.Groups[1].Value);
+                    if (Uri.TryCreate(unescaped, UriKind.Absolute, out _))
+                    {
+                        url = unescaped;
+                    }
+                }
+            }
+
             if (url.Contains("drive.google.com", StringComparison.OrdinalIgnoreCase) ||
                 url.Contains("docs.google.com", StringComparison.OrdinalIgnoreCase))
             {

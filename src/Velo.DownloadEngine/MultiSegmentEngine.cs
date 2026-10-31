@@ -32,7 +32,8 @@ public sealed class MultiSegmentEngine : IDownloadEngine
         {
             AllowAutoRedirect = true,
             MaxAutomaticRedirections = 5,
-            EnableMultipleHttp2Connections = true
+            EnableMultipleHttp2Connections = true,
+            UseCookies = false
         })
         {
             Timeout = TimeSpan.FromMinutes(10)
@@ -143,6 +144,18 @@ public sealed class MultiSegmentEngine : IDownloadEngine
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
+
+        var finalUri = response.RequestMessage?.RequestUri;
+        if (finalUri != null && finalUri.ToString().Contains("accounts.google.com", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Download requires Google authentication. Active session cookies are missing or expired.");
+        }
+
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (string.Equals(mediaType, "text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Server returned an HTML web page instead of a file stream. Authentication or direct link confirmation required.");
+        }
 
         if (!job.ExpectedBytes.HasValue && response.Content.Headers.ContentLength.HasValue)
         {
