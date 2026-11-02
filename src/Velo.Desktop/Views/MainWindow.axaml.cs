@@ -20,8 +20,17 @@ public partial class MainWindow : Window
     {
         if (!_isForceExit)
         {
-            e.Cancel = true;
-            Hide();
+            if (DataContext is MainWindowViewModel vm && vm.CloseToTray)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+            else
+            {
+                // Fully exit application and background services to free memory and CPU
+                e.Cancel = false;
+                ForceExit();
+            }
         }
     }
 

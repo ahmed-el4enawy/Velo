@@ -18,6 +18,7 @@ public sealed class SqliteSettingsRepository : ISettingsRepository
     public const string KeySpeedLimitBytes = "engine.speed_limit_bytes_per_sec";
     public const string KeyClipboardMonitoring = "app.clipboard_monitoring_enabled";
     public const string KeyDefaultDownloadDirectory = "app.default_download_directory";
+    public const string KeyCloseToTray = "app.close_to_tray";
 
     public SqliteSettingsRepository(string connectionString)
     {
@@ -75,6 +76,9 @@ public sealed class SqliteSettingsRepository : ISettingsRepository
                 case KeyDefaultDownloadDirectory when !string.IsNullOrWhiteSpace(value):
                     settings.DefaultDownloadDirectory = value;
                     break;
+                case KeyCloseToTray when bool.TryParse(value, out bool closeToTray):
+                    settings.CloseToTray = closeToTray;
+                    break;
             }
         }
 
@@ -94,6 +98,7 @@ public sealed class SqliteSettingsRepository : ISettingsRepository
         await UpsertValueInternalAsync(connection, transaction, KeySpeedLimitBytes, (settings.SpeedLimitBytesPerSecond?.ToString(CultureInfo.InvariantCulture)) ?? "0", cancellationToken);
         await UpsertValueInternalAsync(connection, transaction, KeyClipboardMonitoring, settings.ClipboardMonitoringEnabled.ToString(), cancellationToken);
         await UpsertValueInternalAsync(connection, transaction, KeyDefaultDownloadDirectory, settings.DefaultDownloadDirectory, cancellationToken);
+        await UpsertValueInternalAsync(connection, transaction, KeyCloseToTray, settings.CloseToTray.ToString(), cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
     }

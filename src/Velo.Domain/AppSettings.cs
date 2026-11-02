@@ -12,4 +12,6 @@ public sealed class AppSettings
     public long? SpeedLimitBytesPerSecond { get; set; } = null; // null = unlimited
     public bool ClipboardMonitoringEnabled { get; set; } = false; // PRD FR-17: explicit opt-in
     public string DefaultDownloadDirectory { get; set; } = string.Empty;
+    public bool CloseToTray { get; set; } = false; // When false, closing MainWindow fully terminates Velo and background services
 }
+

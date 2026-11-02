@@ -67,6 +67,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasFilteredDownloads = false;
 
+    [ObservableProperty]
+    private bool _closeToTray = false;
+
     public bool HasDownloads => Downloads.Count > 0;
 
     public ObservableCollection<DownloadItemViewModel> Downloads { get; } = [];
@@ -114,6 +117,8 @@ public partial class MainWindowViewModel : ViewModelBase
             if (settingsRepo != null)
             {
                 var settings = await settingsRepo.GetSettingsAsync();
+                CloseToTray = settings.CloseToTray;
+
                 if (settings.SpeedLimitBytesPerSecond.HasValue && settings.SpeedLimitBytesPerSecond.Value > 0)
                 {
                     _configuredSpeedLimitBytes = settings.SpeedLimitBytesPerSecond.Value;
@@ -499,6 +504,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var vm = _serviceProvider.GetRequiredService<SettingsWindowViewModel>();
         var dialog = new SettingsWindow(vm);
+        dialog.Closed += async (_, _) =>
+        {
+            await LoadInitialSettingsAsync();
+        };
 
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {

@@ -35,6 +35,9 @@ public sealed partial class SettingsWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _defaultDownloadDirectory = string.Empty;
 
+    [ObservableProperty]
+    private bool _closeToTray = false;
+
     public event Action? RequestClose;
 
     public SettingsWindowViewModel(
@@ -60,6 +63,7 @@ public sealed partial class SettingsWindowViewModel : ViewModelBase
         MaxConnectionsPerHost = settings.MaxConnectionsPerHost;
         ClipboardMonitoringEnabled = settings.ClipboardMonitoringEnabled;
         DefaultDownloadDirectory = settings.DefaultDownloadDirectory;
+        CloseToTray = settings.CloseToTray;
 
         if (settings.SpeedLimitBytesPerSecond.HasValue && settings.SpeedLimitBytesPerSecond.Value > 0)
         {
@@ -87,7 +91,8 @@ public sealed partial class SettingsWindowViewModel : ViewModelBase
             MaxConnectionsPerHost = Math.Clamp(MaxConnectionsPerHost, 1, 32),
             SpeedLimitBytesPerSecond = speedLimitBytes,
             ClipboardMonitoringEnabled = ClipboardMonitoringEnabled,
-            DefaultDownloadDirectory = DefaultDownloadDirectory
+            DefaultDownloadDirectory = DefaultDownloadDirectory,
+            CloseToTray = CloseToTray
         };
 
         await _settingsRepository.SaveSettingsAsync(settings);
